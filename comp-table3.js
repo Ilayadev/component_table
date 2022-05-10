@@ -471,7 +471,7 @@ class mycomponent extends HTMLElement {
         }
     }
     connectedCallback() {
-        this.generaterows(10000)
+        this.generaterows(1000)
         this.CreatingColumns()
         this.CheckingTableHeight()
         this.Rowheight = this.getAttribute('rowheight')
