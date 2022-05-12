@@ -55,93 +55,6 @@ class mycomponent extends HTMLElement {
         let shadow = this.attachShadow({ mode: "open" })
         shadow.appendChild(template.content.cloneNode(true))
     }
-    table = {
-        tableHeight: 600,
-        columns: [
-            {
-                title: 'Id',
-                type: 'number',
-                componentName: 'div'
-            },
-            {
-                title: 'Name',
-                type: 'string',
-                componentName: 'span'
-            },
-            {
-                title: 'Age',
-                type: 'number',
-                componentName: 'p'
-            },
-            {
-                title: 'Gender',
-                type: 'string',
-                componentName: 'i'
-            },
-            {
-                title: 'Date',
-                type: 'date',
-                componentName: 'span'
-            }, {
-                title: 'Attendance',
-                type: 'boolean',
-                componentName: 'div'
-            }
-        ],
-        rows: [
-        ]
-    }
-    generatetext() {
-        var random = Math.floor(Math.random() * 10);
-        return 'text' + random;
-    };
-    generatenumber(x) {
-        var random;
-        if (x === 'id') {
-            random = '#' + (Math.floor(Math.random() * 10) + 5000);
-        } else {
-            random = Math.floor(Math.random() * 10);
-        }
-        return random;
-    };
-    generatedate() {
-        var day = Math.floor(Math.random() * 31);
-        var month = new Date().getMonth();
-        var year = new Date().getFullYear();
-        return `${day}/${month}/${year}`
-    };
-    generateboolean() {
-        var arr = ['true', 'false']
-        var random = Math.floor(Math.random() * 2);
-        var value = arr[random]
-        return value;
-    };
-    generating(data) {
-        if (data.type === 'string') {
-            return this.generatetext()
-        } else if (data.type === 'number') {
-            return this.generatenumber(data.title);
-        } else if (data.type === 'date') {
-            return this.generatedate();
-        } else {
-            return this.generateboolean();
-        }
-    }
-    creatingdata(MetaObject) {
-        let columns = MetaObject.columns
-        let NewObject = {}
-        columns.forEach(x => {
-            let element = this.CreatingElement('button')
-            element.innerHTML = this.generating(x)
-            NewObject[x.title] = element
-        });
-        MetaObject.rows.push(NewObject)
-    }
-    generaterows(NoOfRows) {
-        for (var i = 1; i <= NoOfRows; i++) {
-            this.creatingdata(this.table);
-        }
-    }
     CreatingColumns() {
         let container = this.shadowRoot.querySelector('.container')
         let ObjectColumn = this.table.columns
@@ -163,6 +76,8 @@ class mycomponent extends HTMLElement {
             container.appendChild(element)
         }
     }
+    table = ''
+    tableheight = 0
     NoOfRowsforBlock = 0
     preblock = 0
     block = 0
@@ -182,11 +97,6 @@ class mycomponent extends HTMLElement {
         let ele = document.createElement(NameOfElement)
         ele.classList.add('item')
         return ele
-    }
-    CheckingTableHeight() {
-        if (!this.table.tableHeight) {
-            this.table.tableHeight = 300
-        }
     }
     renderingRowsForward(number, removeelement) {
         let container = this.shadowRoot.querySelector('.container')
@@ -208,15 +118,16 @@ class mycomponent extends HTMLElement {
                         let column = this.table.columns
                         column.forEach((x) => {
                             let name = x.title
-                            let cells = rows[i][name]
-                            cells.setAttribute('type', 'cells')
-                            cells.setAttribute('tabindex', 1)
-                            // let slot = this.CreatingElement('slot')
-                            // slot.name=`${name}${i+1}`
-                            container.appendChild(cells)
-                            // cells.slot=`${name}${i+1}`  
-                            cells.style.height = this.Rowheight + 'px'
-                            // this.appendChild(cells)                            
+                            let elementobj = rows[i][name]
+                            let element = this.generatingElements(elementobj)
+                            // cells.setAttribute('type', 'cells')
+                            // cells.setAttribute('tabindex', 1)
+                            let slot = this.CreatingElement('slot')
+                            slot.name = `${name}${i + 1}`
+                            container.appendChild(slot)
+                            element.slot = `${name}${i + 1}`
+                            element.style.height = this.Rowheight + 'px'
+                            this.appendChild(element)
                         })
                     } else break
                 }
@@ -249,20 +160,19 @@ class mycomponent extends HTMLElement {
                 container.insertBefore(serialElement, insertingElement)
                 column.forEach(x => {
                     let name = x.title
-                    let cells = rows[i][name]
-                    cells.setAttribute('type', 'cells')
-                    cells.setAttribute('tabindex', 1)
-                    // let slot = this.CreatingElement('slot')
-                    // slot.name=`${name}${i+1}`                   
-                    container.insertBefore(cells, insertingElement)
-                    // cells.slot=`${name}${i+1}`
-                    cells.style.height = this.Rowheight + 'px'
-                    // this.appendChild(cells)
+                    let elementobj = rows[i][name]
+                    let element = this.generatingElements(elementobj)
+                    let slot = this.CreatingElement('slot')
+                    slot.name = `${name}${i + 1}`
+                    container.insertBefore(slot, insertingElement)
+                    element.slot = `${name}${i + 1}`
+                    element.style.height = this.Rowheight + 'px'
+                    this.insertBefore(element,this.children[0])
 
                 })
             }
             this.RemovingDownMostElement()
-            main.scrollTop = 600
+            main.scrollTop = this.tableheight
         }
     }
     // throttlingthesroll=(callback,time)=>{        
@@ -283,13 +193,13 @@ class mycomponent extends HTMLElement {
         if (this.overallElement) {
             let overall = this.shadowRoot.querySelector('.overall')
             let main = this.shadowRoot.querySelector('.main')
-            let scrolltop = Math.floor(overall.scrollTop)
+            let scrolltop = Math.round(overall.scrollTop)
             let scrollheight = overall.scrollHeight
             let clientheight = overall.clientHeight
             let bottom = scrollheight - clientheight
             this.checkingMainElement = true
             if (this.TotalNoOfBlocks > 3) {
-                let block = Math.ceil(scrolltop / 600)
+                let block = Math.ceil(scrolltop / this.tableheight)
                 if (scrolltop >= this.previousscrolltop) {
                     if (scrolltop === bottom) {
                         block = this.TotalNoOfBlocks - 1
@@ -307,12 +217,12 @@ class mycomponent extends HTMLElement {
                 }
                 this.previousscrolltop = scrolltop
                 if (scrolltop === bottom) {
-                    main.scrollTop = 1250
+                    main.scrollTop = (2 * this.tableheight) + 20
                 } else if (scrolltop === 0) {
                     main.scrollTop = 0
                 }
                 else {
-                    main.scrollTop = (this.scrollvariable * 600) + (scrolltop % 600)
+                    main.scrollTop = (this.scrollvariable * (this.NoOfRowsforBlock * this.Rowheight)) + (scrolltop % this.tableheight)
                 }
             }
             else {
@@ -333,7 +243,7 @@ class mycomponent extends HTMLElement {
             var scrollheight = main.scrollHeight;
             var clientheight = main.clientHeight;
             var bottom = scrollheight - clientheight;
-            var scrolltop = Math.floor(main.scrollTop);
+            var scrolltop = Math.round(main.scrollTop)
             this.checkingOverallElement = true
             if (this.TotalNoOfBlocks > 3) {
                 if (scrolltop >= this.currentscrolltop) {
@@ -343,11 +253,11 @@ class mycomponent extends HTMLElement {
                             this.CheckingGenratedBlocks(this.block, 'forward')
                         }
                         if (this.block === this.TotalNoOfBlocks) {
-                            overall.scrollTop = (this.preblock - 1) * 600 + (scrolltop)
+                            overall.scrollTop = (this.preblock - 1) * (this.NoOfRowsforBlock * this.Rowheight) + (scrolltop)
                         }
                     }
                     else {
-                        overall.scrollTop = (this.preblock - 1) * 600 + (scrolltop)
+                        overall.scrollTop = (this.preblock - 1) * (this.NoOfRowsforBlock * this.Rowheight) + (scrolltop)
                     }
                 } else {
                     this.currentscrolltop = scrolltop
@@ -357,14 +267,15 @@ class mycomponent extends HTMLElement {
                         }
                         if (this.preblock === 1) {
                             overall.scrollTop = 0
-                        } else {
+                        }
+                        else {
                             setTimeout(() => {
-                                main.scrollTop = 600
-                            }, 18);
+                                main.scrollTop = this.tableheight
+                            }, 1);
                         }
 
                     } else {
-                        overall.scrollTop = (this.preblock - 1) * 600 + (scrolltop)
+                        overall.scrollTop = (this.preblock - 1) * (this.NoOfRowsforBlock * this.Rowheight) + (scrolltop)
                     }
                 }
             } else {
@@ -382,16 +293,28 @@ class mycomponent extends HTMLElement {
                 container.children[elementIndex].remove()
             })
         }
+        for (let i = 1; i <= this.NoOfRowsforBlock; i++) {
+            column.forEach(x => {
+                this.children[0].remove()
+            })
+        }
     }
-    RemovingDownMostElement() {
+    RemovingDownMostElement() {        
         let container = this.shadowRoot.querySelector('.container')
         let columns_length = this.table.columns.length + 1
         let NoOfchildForThreeBlocks = (this.NoOfRowsforBlock * 3) * columns_length + columns_length
         let totalNoOfChildrens = container.childElementCount
-        for (let i = 0; i < totalNoOfChildrens - 2; i++) {
+        for (let i = 0; i < totalNoOfChildrens; i++) {
             if (container.children[NoOfchildForThreeBlocks]) {
                 container.children[NoOfchildForThreeBlocks].remove()
-            }
+            }else break
+        }
+        let Noofelement=this.NoOfRowsforBlock*this.table.columns.length*3
+        let componentchildrens=this.childElementCount
+        for(let i=1;i<=componentchildrens;i++){
+            if(this.children[Noofelement]){
+                this.children[Noofelement].remove()
+            }else break
         }
     }
     CheckingGenratedBlocks(number, direction) {
@@ -424,7 +347,7 @@ class mycomponent extends HTMLElement {
         }
         this.Highlighted = attribute
     }
-    highlightingcells = (e) => {       
+    highlightingcells = (e) => {
         // if (e.ctrlKey&&e.keyCode>=37&&e.keyCode<=40) {
         //     let main = this.shadowRoot.querySelector('.main')
         //     let keycode = e.keyCode
@@ -470,19 +393,30 @@ class mycomponent extends HTMLElement {
             return index;
         }
     }
+    generatingElements(elementobj) {
+        let element = document.createElement(`${elementobj.name}`)
+        for (let key in elementobj) {
+            if (key !== 'name' && key !== 'content') {
+                element.setAttribute(`${key}`, `${elementobj[key]}`)
+            } else if (key === 'content') {
+                element.innerHTML = elementobj[key]
+            }
+        }
+        return element
+    }
     connectedCallback() {
-        this.generaterows(1000)
+        this.tableheight = this.getAttribute('tableheight')
+        let data = this.getAttribute('data')
+        this.table = JSON.parse(data)
         this.CreatingColumns()
-        this.CheckingTableHeight()
         this.Rowheight = this.getAttribute('rowheight')
         document.styleSheets[0].cssRules[1].style.gridAutoRows = `${this.Rowheight}px`
         let lengthOfRows = this.table.rows.length
-        let tableHeight = this.table.tableHeight
         let overall = this.shadowRoot.querySelector('.overall')
-        overall.style.height = tableHeight + 'px'
+        overall.style.height = this.tableheight + 'px'
         this.shadowRoot.querySelector('.dummy').style.height = (this.Rowheight * lengthOfRows) + 20 + 'px'
-        this.NoOfRowsforBlock = Math.floor((tableHeight / this.Rowheight))
-        this.TotalNoOfBlocks = Math.ceil((this.table.rows.length / this.NoOfRowsforBlock))
+        this.NoOfRowsforBlock = Math.floor((this.tableheight / this.Rowheight))
+        this.TotalNoOfBlocks = Math.ceil((lengthOfRows / this.NoOfRowsforBlock))
         for (let i = 1; i <= 3; i++) {
             this.renderingRowsForward(i, false)
         }
