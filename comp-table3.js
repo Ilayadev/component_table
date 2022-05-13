@@ -150,9 +150,9 @@ class mycomponent extends HTMLElement {
                             element.slot = `${name}${i + 1}`
                             element.style.height = this.Rowheight + 'px'
                             this.appendChild(element)
-                            if (checkinghighlightcell) {
+                            if (checkinghighlightcell) {                                
                                 if (this.selectedrowno === i + 1) {
-                                    if (name === this.cellname) {
+                                    if (name === this.cellname) {                                        
                                         this.highlightingcells(element)
                                     }
                                 }
@@ -228,9 +228,9 @@ class mycomponent extends HTMLElement {
                     element.slot = `${name}${i + 1}`
                     element.style.height = this.Rowheight + 'px'
                     this.insertBefore(element, insertingelementincomp)
-                    if (checkinghighlightcell) {
-                        if (this.selectedrowno === i + 1) {
-                            if (name === this.cellname) {
+                    if (checkinghighlightcell) {                        
+                        if (this.selectedrowno === i + 1) {                            
+                            if (name === this.cellname) {                                
                                 this.highlightingcells(element)
                             }
                         }
@@ -457,10 +457,10 @@ class mycomponent extends HTMLElement {
     highlightingcells(cell) {
         this.selectedcell = cell
         let container = this.shadowRoot.querySelector('.container')
-        let index = this.findingindex(cell, 'component')
+        let index = this.findingindex(cell, 'component')       
         this.cellname = this.table.columns[(index % this.table.columns.length)].title
-        let row = Math.ceil(index / this.table.columns.length)
-        let cellrow = (row * (this.table.columns.length + 1))
+        let row = Math.ceil((index+1) / this.table.columns.length)
+        let cellrow = (row * (this.table.columns.length + 1))       
         this.selectedrowno = (container.children[cellrow].innerHTML) / 1
         this.shadowRoot.styleSheets[0].cssRules[8].selectorText = `.nothing`
         this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(${index + 1})`;
