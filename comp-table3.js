@@ -36,6 +36,7 @@ template.innerHTML = `<style>
     overflow-y: auto;
     width: 100%;   
     display:flex;
+    border: 1px solid #dedede; 
 }
 .slotted{
     background-color: rgb(191, 240, 191);  
@@ -97,8 +98,10 @@ class mycomponent extends HTMLElement {
     checkingOverallElement = false
     checkingMainElement = false
     Highlighted = ''
-    selectedrowno=0
-    selectedrow=''
+    selectedrowno = 0
+    selectedrow = ''
+    cellname = ''
+    selectedcell = ''
     CreatingElement(NameOfElement) {
         let ele = document.createElement(NameOfElement)
         ele.classList.add('item')
@@ -106,7 +109,8 @@ class mycomponent extends HTMLElement {
     }
     renderingRowsForward(number, removeelement) {
         let container = this.shadowRoot.querySelector('.container')
-        let checkinghighlightrow=false
+        let checkinghighlightrow = false
+        let checkinghighlightcell = false
         if (this.TotalNoOfBlocks >= number) {
             if (!this.currentBlocks.includes(number) && number !== 0) {
                 let end = number * this.NoOfRowsforBlock
@@ -115,8 +119,12 @@ class mycomponent extends HTMLElement {
                 this.block = number
                 this.currentBlocks.push(number)
                 this.preblock = number - 2
-                if(this.selectedrowno>start){
-                    checkinghighlightrow=true
+                if (this.selectedrowno > start) {
+                    if (this.Highlighted === 'row') {
+                        checkinghighlightrow = true
+                    } else {
+                        checkinghighlightcell = true
+                    }
                 }
                 for (let i = start; i < end; i++) {
                     if (rows[i] !== undefined) {
@@ -125,8 +133,8 @@ class mycomponent extends HTMLElement {
                         serialElement.style.height = this.Rowheight + 'px'
                         serialElement.innerHTML = i + 1
                         container.appendChild(serialElement)
-                        if(checkinghighlightrow){
-                            if(this.selectedrowno===i+1){
+                        if (checkinghighlightrow) {
+                            if (this.selectedrowno === i + 1) {
                                 this.highlightingrow(serialElement)
                             }
                         }
@@ -135,13 +143,20 @@ class mycomponent extends HTMLElement {
                             let name = x.title
                             let elementobj = rows[i][name]
                             let element = this.generatingElements(elementobj)
-                            element.setAttribute('type', 'cells')                            
+                            element.setAttribute('type', 'cells')
                             let slot = this.CreatingElement('slot')
                             slot.name = `${name}${i + 1}`
                             container.appendChild(slot)
                             element.slot = `${name}${i + 1}`
                             element.style.height = this.Rowheight + 'px'
                             this.appendChild(element)
+                            if (checkinghighlightcell) {
+                                if (this.selectedrowno === i + 1) {
+                                    if (name === this.cellname) {
+                                        this.highlightingcells(element)
+                                    }
+                                }
+                            }
                         })
                     } else break
                 }
@@ -149,13 +164,19 @@ class mycomponent extends HTMLElement {
                     this.currentBlocks.shift()
                     this.RemovingTopMostElements()
                 }
-                if(this.Highlighted==='row'){
-                    let InorOut=this.checkingTheElementInorOut(this.selectedrowno)
-                    if(!InorOut){                        
-                        this.shadowRoot.styleSheets[0].cssRules[8].selectorText=`.nothing` 
+                if (this.Highlighted === 'row' || this.Highlighted === 'cells') {
+                    let InorOut = this.checkingTheElementInorOut(this.selectedrowno)
+                    if (!InorOut) {
                         this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `.nothing`;
-                    }else{
-                        this.highlightingrow(this.selectedrow)
+                        if (this.Highlighted === 'row') {
+                            this.shadowRoot.styleSheets[0].cssRules[8].selectorText = `.nothing`
+                        }
+                    } else {
+                        if (this.Highlighted === 'row') {
+                            this.highlightingrow(this.selectedrow)
+                        } else {
+                            this.highlightingcells(this.selectedcell)
+                        }
                     }
                 }
             }
@@ -164,7 +185,8 @@ class mycomponent extends HTMLElement {
     renderingRowsBackward(number) {
         let main = this.shadowRoot.querySelector('.main')
         let container = this.shadowRoot.querySelector('.container')
-        let checkinghighlightrow=false
+        let checkinghighlightrow = false
+        let checkinghighlightcell = false
         if (!this.currentBlocks.includes(number) && number !== 0 && number <= this.TotalNoOfBlocks) {
             let end = number * this.NoOfRowsforBlock
             let start = end - this.NoOfRowsforBlock
@@ -176,9 +198,13 @@ class mycomponent extends HTMLElement {
             let columns_length = this.table.columns.length
             let insertingElement = container.children[columns_length + 1]
             let column = this.table.columns
-            let insertingelementincomp=this.children[0]
-            if(this.selectedrowno>start){
-                checkinghighlightrow=true
+            let insertingelementincomp = this.children[0]
+            if (this.selectedrowno > start) {
+                if (this.Highlighted === 'row') {
+                    checkinghighlightrow = true
+                } else {
+                    checkinghighlightcell = true
+                }
             }
             for (let i = start; i < end; i++) {
                 let serialElement = this.CreatingElement('div')
@@ -186,9 +212,8 @@ class mycomponent extends HTMLElement {
                 serialElement.style.height = this.Rowheight + 'px'
                 serialElement.setAttribute('type', 'row')
                 container.insertBefore(serialElement, insertingElement)
-                if(checkinghighlightrow){
-                    if(this.selectedrowno===i+1){
-                        console.log()
+                if (checkinghighlightrow) {
+                    if (this.selectedrowno === i + 1) {
                         this.highlightingrow(serialElement)
                     }
                 }
@@ -196,25 +221,38 @@ class mycomponent extends HTMLElement {
                     let name = x.title
                     let elementobj = rows[i][name]
                     let element = this.generatingElements(elementobj)
-                    element.setAttribute('type','cells')
+                    element.setAttribute('type', 'cells')
                     let slot = this.CreatingElement('slot')
                     slot.name = `${name}${i + 1}`
                     container.insertBefore(slot, insertingElement)
                     element.slot = `${name}${i + 1}`
                     element.style.height = this.Rowheight + 'px'
-                    this.insertBefore(element,insertingelementincomp)
+                    this.insertBefore(element, insertingelementincomp)
+                    if (checkinghighlightcell) {
+                        if (this.selectedrowno === i + 1) {
+                            if (name === this.cellname) {
+                                this.highlightingcells(element)
+                            }
+                        }
+                    }
 
                 })
             }
             this.RemovingDownMostElement()
             main.scrollTop = this.tableheight
-            if(this.Highlighted==='row'){
-                let InorOut=this.checkingTheElementInorOut(this.selectedrowno)                
-                if(!InorOut){                   
-                    this.shadowRoot.styleSheets[0].cssRules[8].selectorText=`.nothing` 
+            if (this.Highlighted === 'row' || this.Highlighted === 'cells') {
+                let InorOut = this.checkingTheElementInorOut(this.selectedrowno)
+                if (!InorOut) {
                     this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `.nothing`;
-                }else{
-                    this.highlightingrow(this.selectedrow)
+                    if (this.Highlighted === 'row') {
+                        this.shadowRoot.styleSheets[0].cssRules[8].selectorText = `.nothing`
+                    }
+                } else {
+                    if (this.Highlighted === 'row') {
+                        this.highlightingrow(this.selectedrow)
+                    } else {
+                        this.highlightingcells(this.selectedcell)
+                    }
                 }
             }
         }
@@ -343,7 +381,7 @@ class mycomponent extends HTMLElement {
             })
         }
     }
-    RemovingDownMostElement() {        
+    RemovingDownMostElement() {
         let container = this.shadowRoot.querySelector('.container')
         let columns_length = this.table.columns.length + 1
         let NoOfchildForThreeBlocks = (this.NoOfRowsforBlock * 3) * columns_length + columns_length
@@ -351,14 +389,14 @@ class mycomponent extends HTMLElement {
         for (let i = 0; i < totalNoOfChildrens; i++) {
             if (container.children[NoOfchildForThreeBlocks]) {
                 container.children[NoOfchildForThreeBlocks].remove()
-            }else break
+            } else break
         }
-        let Noofelement=this.NoOfRowsforBlock*this.table.columns.length*3
-        let componentchildrens=this.childElementCount
-        for(let i=1;i<=componentchildrens;i++){
-            if(this.children[Noofelement]){
+        let Noofelement = this.NoOfRowsforBlock * this.table.columns.length * 3
+        let componentchildrens = this.childElementCount
+        for (let i = 1; i <= componentchildrens; i++) {
+            if (this.children[Noofelement]) {
                 this.children[Noofelement].remove()
-            }else break
+            } else break
         }
     }
     CheckingGenratedBlocks(number, direction) {
@@ -375,104 +413,111 @@ class mycomponent extends HTMLElement {
         }
     }
     highlighting = (e) => {
-        let Element = e.target               
+        let Element = e.target
         let attribute = Element.getAttribute('type')
-        let index;               
+        let index;
         let rowsLength = this.table.columns.length
         if (attribute === 'column') {
-            index = this.findingindex(Element,'container')  
-            let columnNo = Element.getAttribute('columnNo') / 1    
-            this.shadowRoot.styleSheets[0].cssRules[8].selectorText=`.item:nth-child(${index+1})`      
+            index = this.findingindex(Element, 'container')
+            let columnNo = Element.getAttribute('columnNo') / 1
+            this.shadowRoot.styleSheets[0].cssRules[8].selectorText = `.item:nth-child(${index + 1})`
             this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(${rowsLength}n+${columnNo}))`;
         } else if (attribute === 'row') {
             this.highlightingrow(Element)
         } else if (attribute === 'cells') {
-            this.selectedrowno=0
-            index=this.findingindex(Element,'component')                 
-            this.shadowRoot.styleSheets[0].cssRules[8].selectorText=`.nothing` 
-            this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(${index+1})`;
+            this.highlightingcells(Element)
         }
         this.Highlighted = attribute
     }
-    checkingTheElementInorOut(ip){
-        let returnvalue=false
-        let array=this.currentBlocks
-        let arraylength=array.length
-        for(let i=0;i<arraylength;i++){   
-            let end=array[i]*this.NoOfRowsforBlock 
-            let start=end-this.NoOfRowsforBlock 
-            if(ip>start&&ip<=end){
-                returnvalue=true
+    checkingTheElementInorOut(ip) {
+        let returnvalue = false
+        let array = this.currentBlocks
+        let arraylength = array.length
+        for (let i = 0; i < arraylength; i++) {
+            let end = array[i] * this.NoOfRowsforBlock
+            let start = end - this.NoOfRowsforBlock
+            if (ip > start && ip <= end) {
+                returnvalue = true
                 break
-            }           
+            }
         }
         return returnvalue
     }
-    highlightingrow(inputelement){
-        this.selectedrowno=(inputelement.innerHTML )/1
-        this.selectedrow=inputelement      
-        let rowsLength=table.columns.length
-        let index=this.findingindex(inputelement,'container')  
-        let row=index/(rowsLength+1)
-        let end =row*rowsLength
-        let start =end-(rowsLength-1)
-        this.shadowRoot.styleSheets[0].cssRules[8].selectorText=`.item:nth-child(${index+1})` 
+    highlightingrow(inputelement) {
+        this.selectedrowno = (inputelement.innerHTML) / 1
+        this.selectedrow = inputelement
+        let rowsLength = table.columns.length
+        let index = this.findingindex(inputelement, 'container')
+        let row = index / (rowsLength + 1)
+        let end = row * rowsLength
+        let start = end - (rowsLength - 1)
+        this.shadowRoot.styleSheets[0].cssRules[8].selectorText = `.item:nth-child(${index + 1})`
         this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(n+${start}):nth-child(-n+${end}))`;
-       }
-    highlightingcells = (e) => {
-        // if (e.ctrlKey&&e.keyCode>=37&&e.keyCode<=40) {
-        //     let main = this.shadowRoot.querySelector('.main')
-        //     let keycode = e.keyCode
-        //     let element;
-        //     let columnlength = this.table.columns.length + 1
-        //     e.preventDefault()
-        //     if (keycode === 39) {
-        //         element = e.path[0].nextElementSibling
-        //     }
-        //     else if (keycode === 37) {
-        //         element = e.path[0].previousElementSibling
-        //     } else if (keycode === 40 || keycode === 38) {
-        //         let oldeleind = this.findingindex(e.path[0],'component')
-        //         let neweleind;
-        //         if (keycode === 40) {
-        //             neweleind = oldeleind + columnlength
-        //         } else {
-        //             neweleind = oldeleind - columnlength
-        //         }
-        //         element = this.children[neweleind]
-        //         let top = element.getBoundingClientRect().top
-        //         if (top > 580) {
-        //             main.scrollBy(0, 20)
-        //         } else if (top < 10) {
-        //             main.scrollBy(0, -20)
-        //         }
-        //     }
-        //     if (element.getAttribute('type') === 'cells') {
-        //         element.focus()
-        //         let index = this.findingindex(element)
-        //         this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(${index + 1}))`;                
-        //     }
-        // }
-
     }
-    findingindex(e,parent) {
+    highlightingcells(cell) {
+        this.selectedcell = cell
+        let container = this.shadowRoot.querySelector('.container')
+        let index = this.findingindex(cell, 'component')
+        this.cellname = this.table.columns[(index % this.table.columns.length)].title
+        let row = Math.ceil(index / this.table.columns.length)
+        let cellrow = (row * (this.table.columns.length + 1))
+        this.selectedrowno = (container.children[cellrow].innerHTML) / 1
+        this.shadowRoot.styleSheets[0].cssRules[8].selectorText = `.nothing`
+        this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(${index + 1})`;
+    }
+    // highlightingcells = (e) => {
+    //     // if (e.ctrlKey&&e.keyCode>=37&&e.keyCode<=40) {
+    //     //     let main = this.shadowRoot.querySelector('.main')
+    //     //     let keycode = e.keyCode
+    //     //     let element;
+    //     //     let columnlength = this.table.columns.length + 1
+    //     //     e.preventDefault()
+    //     //     if (keycode === 39) {
+    //     //         element = e.path[0].nextElementSibling
+    //     //     }
+    //     //     else if (keycode === 37) {
+    //     //         element = e.path[0].previousElementSibling
+    //     //     } else if (keycode === 40 || keycode === 38) {
+    //     //         let oldeleind = this.findingindex(e.path[0],'component')
+    //     //         let neweleind;
+    //     //         if (keycode === 40) {
+    //     //             neweleind = oldeleind + columnlength
+    //     //         } else {
+    //     //             neweleind = oldeleind - columnlength
+    //     //         }
+    //     //         element = this.children[neweleind]
+    //     //         let top = element.getBoundingClientRect().top
+    //     //         if (top > 580) {
+    //     //             main.scrollBy(0, 20)
+    //     //         } else if (top < 10) {
+    //     //             main.scrollBy(0, -20)
+    //     //         }
+    //     //     }
+    //     //     if (element.getAttribute('type') === 'cells') {
+    //     //         element.focus()
+    //     //         let index = this.findingindex(element)
+    //     //         this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(${index + 1}))`;                
+    //     //     }
+    //     // }
+
+    // }
+    findingindex(e, parent) {
         let att = e.hasAttribute('type')
         if (att) {
-            let parentele ;
-            if(parent==='component'){
-                parentele=this
-                
-            }else{
+            let parentele;
+            if (parent === 'component') {
+                parentele = this
+            } else {
                 parentele = this.shadowRoot.querySelector('.container')
             }
-            let childs = parentele.children;            
+            let childs = parentele.children;
             let array = Array.from(childs)
             let index = array.indexOf(e);
             return index;
         }
     }
     generatingElements(elementobj) {
-        let element = document.createElement(`${elementobj.name}`)
+        let element = this.CreatingElement(elementobj.name)
         for (let key in elementobj) {
             if (key !== 'name' && key !== 'content') {
                 element.setAttribute(`${key}`, `${elementobj[key]}`)
