@@ -69,11 +69,11 @@ function creatingdata(MetaObject) {
     let columns = MetaObject.columns   
     let NewObject = {}
     columns.forEach(x => {
-        let elementobj={}
-        elementobj['name']='div'
-        elementobj['class']='item'
-        elementobj['content']=this.generating(x)
-        NewObject[x.title] = elementobj
+        // let elementobj={}
+        // elementobj['name']='div'
+        // elementobj['class']='item'
+        // elementobj['content']=this.generating(x)
+        NewObject[x.title] = this.generating(x)
     });
     MetaObject.rows.push(NewObject)
 }
@@ -82,4 +82,4 @@ function generaterows(NoOfRows) {
         this.creatingdata(table);
     }
 }
-generaterows(1000)
+generaterows(100000)
