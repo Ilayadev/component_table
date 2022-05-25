@@ -298,7 +298,7 @@ class mycomponent extends HTMLElement {
                     this.CheckingGenratedBlocks(block, "backward")
                 }
                 if (scrolltop === bottom) {
-                    main.scrollTop = (2 * this.tableheight) + 20
+                    main.scrollTop = (2 * this.tableheight) + this.Rowheight
                 } else if (scrolltop === 0) {
                     main.scrollTop = 0
                 }
@@ -473,15 +473,15 @@ class mycomponent extends HTMLElement {
                 let top=targetelement.getBoundingClientRect().top
                 let topbyprecentage=top%this.Rowheight                              
                if(e.keyCode===40){               
-                 if(top>580){
-                    if(top>=600){
+                 if(top>(this.tableheight-this.Rowheight)){
+                    if(top>=this.tableheight){
                         main.scrollBy(0,`${this.Rowheight}`)
                     }else{
                         main.scrollBy(0,topbyprecentage)
                     }
                  }
                }else if(e.keyCode===38){
-                    if(top<20){
+                    if(top<this.Rowheight){
                         if(top===0){                           
                             main.scrollBy(0,-`${this.Rowheight}`)
                         }else{                          
@@ -533,15 +533,19 @@ class mycomponent extends HTMLElement {
         this.sampleele.innerHTML = elementinstring
         let element = this.sampleele.firstElementChild
         let att = cell.corespondingatt
-        if (cell.childselector === false) {
-            if (value === "true" || value === "false") {
-                if (value === "true") {
-                    value = true
-                } else {
-                    value = false
-                }
+        if (value === "true" || value === "false") {
+            if (value === "true") {
+                value = true
+            } else {
+                value = false
             }
+        }
+        if (cell.childselector === false) {           
             element[att] = value
+        }else{
+            let childselector=cell.childselector
+            let child=element.querySelector(`${childselector}`)
+            child[att]=value
         }
         return element
     }
@@ -550,12 +554,12 @@ class mycomponent extends HTMLElement {
         let data = this.getAttribute('data')
         this.table = JSON.parse(data)
         this.CreatingColumns()
-        this.Rowheight = this.getAttribute('rowheight')
-        // document.styleSheets[0].cssRules[1].style.gridAutoRows = `${this.Rowheight}px`
+        this.Rowheight = this.getAttribute('rowheight')       
+        this.shadowRoot.styleSheets[0].cssRules[2].style.gridAutoRows = `${this.Rowheight}px`
         let lengthOfRows = this.table.rows.length
         let overall = this.shadowRoot.querySelector('.overall')        
         overall.style.height = this.tableheight + 'px'
-        this.shadowRoot.querySelector('.dummy').style.height = (this.Rowheight * lengthOfRows) + 20 + 'px'
+        this.shadowRoot.querySelector('.dummy').style.height = (this.Rowheight * lengthOfRows) + 'px'
         this.NoOfRowsforBlock = Math.floor((this.tableheight / this.Rowheight))
         this.TotalNoOfBlocks = Math.ceil((lengthOfRows / this.NoOfRowsforBlock))
         for (let i = 1; i <= 3; i++) {
