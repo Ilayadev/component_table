@@ -16,11 +16,7 @@ let table = {
             title: 'Gender',
             type: 'string',               
         },
-        {
-            title: 'Date',
-            type: 'date',
-            
-        }, {
+         {
             title: 'Attendance',
             type: 'boolean',               
         }
@@ -28,14 +24,23 @@ let table = {
     rows: [
     ]
 }
-function generatetext() {
-    var random = Math.floor(Math.random() * 10);
-    return 'text' + random;
+function generatetext(title) {
+    let value;
+    if(title==='Gender'){
+        var arr = ['male', 'female']
+        var random = Math.floor(Math.random() * 2);
+        value = arr[random]
+    }else{
+        var random = Math.floor(Math.random() * 10);
+        value='text'+random
+    }
+    
+    return value;
 };
 function generatenumber(x) {
     var random;
-    if (x === 'id') {
-        random = '#' + (Math.floor(Math.random() * 10) + 5000);
+    if (x === 'Id') {
+        random =  (Math.floor(Math.random() * 10) + 5000);
     } else {
         random = Math.floor(Math.random() * 10);
     }
@@ -56,7 +61,7 @@ function generatedate() {
 function generating(data) {
     
     if (data.type === 'string') {
-        return this.generatetext()
+        return this.generatetext(data.title)
     } else if (data.type === 'number') {
         return this.generatenumber(data.title);
     } else if (data.type === 'date') {
@@ -82,4 +87,4 @@ function generaterows(NoOfRows) {
         this.creatingdata(table);
     }
 }
-generaterows(100000)
+generaterows(1000)

@@ -29,6 +29,8 @@ template.innerHTML = `<style>
 ::slotted(.header){
     background-color: #fff;
     position: sticky;
+    font-size: medium;
+    font-weight: 700;
     top: 0;
     height:20px
     cursor:pointer;
@@ -97,6 +99,7 @@ class mycomponent extends HTMLElement {
     selectedrow = ''
     cellname = ''
     selectedcell
+    editor
     CreatingElement(NameOfElement) {
         let ele = document.createElement(NameOfElement)
         return ele
@@ -141,7 +144,7 @@ class mycomponent extends HTMLElement {
                             let element = this.generatingElements(this.table.cells.datacell[name], value)
                             let slot = this.CreatingElement('slot')
                             element.setAttribute('cell', 'datacell')
-                            element.setAttribute('tabindex',0)
+                            element.setAttribute('tabindex', 0)
                             slot.name = `${name}${i + 1}`
                             container.appendChild(slot)
                             element.slot = `${name}${i + 1}`
@@ -221,7 +224,7 @@ class mycomponent extends HTMLElement {
                     let element = this.generatingElements(this.table.cells.datacell[name], value)
                     let slot = this.CreatingElement('slot')
                     element.setAttribute('cell', 'datacell')
-                    element.setAttribute('tabindex',0)
+                    element.setAttribute('tabindex', 0)
                     slot.name = `${name}${i + 1}`
                     element.slot = `${name}${i + 1}`
                     container.insertBefore(slot, slotinserting)
@@ -320,7 +323,7 @@ class mycomponent extends HTMLElement {
         } else {
             this.MainElement = true
         }
-        if (this.MainElement) {           
+        if (this.MainElement) {
             let overall = this.shadowRoot.querySelector('.overall')
             var main = this.shadowRoot.querySelector('.main');
             var scrollheight = main.scrollHeight;
@@ -329,8 +332,8 @@ class mycomponent extends HTMLElement {
             var scrolltop = Math.round(main.scrollTop)
             this.checkingOverallElement = true
             if (this.TotalNoOfBlocks > 3) {
-                if (scrolltop >= this.previousmainscrolltop) {                   
-                    if (scrolltop>=1220) {                                    
+                if (scrolltop >= this.previousmainscrolltop) {
+                    if (scrolltop >= 1220) {
                         // this.CheckingGenratedBlocks(this.block,"forward")
                         this.renderingRowsForward(this.block + 1, true)
                         if (this.block === this.TotalNoOfBlocks) {
@@ -405,7 +408,7 @@ class mycomponent extends HTMLElement {
         let attribute = Element.getAttribute('cell')
         let rowsLength = this.table.columns.length
         if (attribute === 'columncell') {
-            this.selectedcell=undefined
+            this.selectedcell = undefined
             let columnNo = Element.getAttribute('columnNo') / 1 + 1
             this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `::slotted(*:nth-child(${rowsLength + 1}n+${columnNo}))`;
         } else if (attribute === 'rowcell') {
@@ -430,7 +433,7 @@ class mycomponent extends HTMLElement {
         return returnvalue
     }
     highlightingrow(inputelement) {
-        this.selectedcell=undefined
+        this.selectedcell = undefined
         this.selectedrowno = (inputelement.innerHTML) / 1
         this.selectedrow = inputelement
         let rowsLength = this.table.columns.length
@@ -439,9 +442,9 @@ class mycomponent extends HTMLElement {
         let end = start + rowsLength
         this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `::slotted(*:nth-child(n+${start}):nth-child(-n+${end}))`;
     }
-    highlightingcells(cell) {          
-        cell.focus({preventScroll:true})
-        this.selectedcell = cell               
+    highlightingcells(cell) {
+        cell.focus({ preventScroll: true })
+        this.selectedcell = cell
         let index = this.findingindex(cell)
         let rowsLength = this.table.columns.length + 1
         let cellrow = Math.floor(index / rowsLength)
@@ -449,74 +452,91 @@ class mycomponent extends HTMLElement {
         this.selectedrowno = (this.children[cellrow * rowsLength].innerHTML) / 1
         this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `::slotted(*:nth-child(${index + 1})`;
     }
-    Keyoperating=(e)=> {           
-        let main=this.shadowRoot.querySelector('.main')             
-        let rowsLength=this.table.columns.length+1
+    Keyoperating = (e) => {
+        let main = this.shadowRoot.querySelector('.main')
+        let rowsLength = this.table.columns.length + 1
         let index;
-        if (e.keyCode >= 37 && e.keyCode <= 40) {
-            e.preventDefault()  
-           let element=e.target 
-           let targetelement;           
-           if(e.keyCode===37){               
-                targetelement=element.previousElementSibling            
-           }else if(e.keyCode===39){               
-               targetelement=element.nextElementSibling
-           }else if(e.keyCode===38){                      
-               index=this.findingindex(element)
-               targetelement=this.children[index-rowsLength]                           
-           }else if(e.keyCode===40){              
-                index=this.findingindex(element)
-                targetelement=this.children[index+rowsLength]              
-           }           
-           if(targetelement){
-            if(targetelement.getAttribute('cell')==='datacell'){ 
-                let top=targetelement.getBoundingClientRect().top
-                let topbyprecentage=top%this.Rowheight                              
-               if(e.keyCode===40){               
-                 if(top>(this.tableheight-this.Rowheight)){
-                    if(top>=this.tableheight){
-                        main.scrollBy(0,`${this.Rowheight}`)
-                    }else{
-                        main.scrollBy(0,topbyprecentage)
-                    }
-                 }
-               }else if(e.keyCode===38){
-                    if(top<this.Rowheight){
-                        if(top===0){                           
-                            main.scrollBy(0,-`${this.Rowheight}`)
-                        }else{                          
-                            main.scrollBy(0,-`${this.Rowheight-top}`)
+        if (e.keyCode >= 37 && e.keyCode <= 40||e.keyCode===13) {                   
+            if(!this.editor){
+                e.preventDefault()
+                let element = e.target
+                let targetelement;
+                if (e.keyCode === 37) {
+                    targetelement = element.previousElementSibling
+                } else if (e.keyCode === 39) {
+                    targetelement = element.nextElementSibling
+                } else if (e.keyCode === 38) {
+                    index = this.findingindex(element)
+                    targetelement = this.children[index - rowsLength]
+                } else if (e.keyCode === 40) {
+                    index = this.findingindex(element)
+                    targetelement = this.children[index + rowsLength]
+                }
+                if (targetelement) {
+                    if (targetelement.getAttribute('cell') === 'datacell') {
+                        let top = targetelement.getBoundingClientRect().top
+                        let topbyprecentage = top % this.Rowheight
+                        if (e.keyCode === 40) {
+                            if (top > (this.tableheight - this.Rowheight)) {
+                                if (top >= this.tableheight) {
+                                    main.scrollBy(0, `${this.Rowheight}`)
+                                } else {
+                                    main.scrollBy(0, topbyprecentage)
+                                }
+                            }
+                        } else if (e.keyCode === 38) {
+                            if (top < this.Rowheight) {
+                                if (top === 0) {
+                                    main.scrollBy(0, -`${this.Rowheight}`)
+                                } else {
+                                    main.scrollBy(0, -`${this.Rowheight - top}`)
+                                }
+                            }
+                        }
+                        if (!element.hasAttribute('contenteditable')) {
+                            this.highlightingcells(targetelement)
                         }
                     }
-               }
-                if(!element.hasAttribute('contenteditable')){
-                    this.highlightingcells(targetelement)
+                }
+            }else{
+                if(e.keyCode===13){
+                    e.preventDefault()
                 }
             }
-           }
-        }
-        if(e.keyCode===13){
-            e.preventDefault()
+        }        
+    }
+    editing = (e) => {        
+        if (this.selectedcell) {
+            let index = this.findingindex(this.selectedcell)
+            let rowsLength = this.table.columns.length + 1
+            let column = (index % rowsLength) - 1
+            let editable = this.table.columns[column].editable
+            if (editable) {
+                this.editor=true
+                this.addingstyle(this.selectedcell)
+                this.selectedcell.setAttribute('contenteditable', 'true')
+                this.selectedcell.addEventListener('blur', this.bluring)
+            } else {
+                alert('This column cannot be edit')
+            }
         }
     }
-    editing=()=>{
-       if(this.selectedcell){           
-          let index=this.findingindex(this.selectedcell)
-          let rowsLength=this.table.columns.length+1
-          let column=(index%rowsLength)-1
-          let editable=this.table.columns[column].editable
-          if(editable){
-              this.selectedcell.setAttribute('contenteditable','true')
-              this.selectedcell.addEventListener('blur',this.bluring)
-          }else{
-              alert('This column cannot be edit')
-          }
-       }
-    }    
-    bluring=(e)=>{
-        let element=e.target       
+    bluring = (e) => {
+        this.editor=false
+        let element = e.target
+        this.removingstyle(element)
         element.removeAttribute('contenteditable')
-        e.target.removeEventListener('blur',this.bluring)
+        e.target.removeEventListener('blur', this.bluring)
+    }
+    addingstyle(ele){
+        ele.style.position = 'relative';
+        ele.style.top = '-1px';
+        ele.style.left = '-2px';
+        ele.style.boxShadow = '2px 3px 4px 0px gray';
+    }
+    removingstyle(ele){
+        ele.style.position = 'static';
+        ele.style.boxShadow = 'none';
     }
     findingindex(e) {
         let att = e.hasAttribute('cell')
@@ -540,12 +560,12 @@ class mycomponent extends HTMLElement {
                 value = false
             }
         }
-        if (cell.childselector === false) {           
+        if (cell.childselector === false) {
             element[att] = value
-        }else{
-            let childselector=cell.childselector
-            let child=element.querySelector(`${childselector}`)
-            child[att]=value
+        } else {
+            let childselector = cell.childselector
+            let child = element.querySelector(`${childselector}`)
+            child[att] = value
         }
         return element
     }
@@ -554,10 +574,10 @@ class mycomponent extends HTMLElement {
         let data = this.getAttribute('data')
         this.table = JSON.parse(data)
         this.CreatingColumns()
-        this.Rowheight = this.getAttribute('rowheight')       
+        this.Rowheight = this.getAttribute('rowheight')
         this.shadowRoot.styleSheets[0].cssRules[2].style.gridAutoRows = `${this.Rowheight}px`
         let lengthOfRows = this.table.rows.length
-        let overall = this.shadowRoot.querySelector('.overall')        
+        let overall = this.shadowRoot.querySelector('.overall')
         overall.style.height = this.tableheight + 'px'
         this.shadowRoot.querySelector('.dummy').style.height = (this.Rowheight * lengthOfRows) + 'px'
         this.NoOfRowsforBlock = Math.floor((this.tableheight / this.Rowheight))
@@ -570,7 +590,7 @@ class mycomponent extends HTMLElement {
         overall.addEventListener('click', this.highlighting)
         overall.addEventListener('scroll', this.overallElementScrolling)
         overall.addEventListener('keydown', this.Keyoperating)
-        overall.addEventListener('dblclick',this.editing)       
+        overall.addEventListener('dblclick', this.editing)
     }
 }
 customElements.define("table-component", mycomponent)
