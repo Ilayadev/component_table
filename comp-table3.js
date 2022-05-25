@@ -456,7 +456,7 @@ class mycomponent extends HTMLElement {
         let main = this.shadowRoot.querySelector('.main')
         let rowsLength = this.table.columns.length + 1
         let index;
-        if (e.keyCode >= 37 && e.keyCode <= 40||e.keyCode===13) {                   
+        if (e.keyCode >= 37 && e.keyCode <= 40||e.keyCode===13) {                         
             if(!this.editor){
                 e.preventDefault()
                 let element = e.target
@@ -498,12 +498,12 @@ class mycomponent extends HTMLElement {
                         }
                     }
                 }
-            }else{
+            }else{                
                 if(e.keyCode===13){
                     e.preventDefault()
                 }
             }
-        }        
+        }       
     }
     editing = (e) => {        
         if (this.selectedcell) {
@@ -525,8 +525,20 @@ class mycomponent extends HTMLElement {
         this.editor=false
         let element = e.target
         this.removingstyle(element)
-        element.removeAttribute('contenteditable')
-        e.target.removeEventListener('blur', this.bluring)
+        element.removeAttribute('contenteditable') 
+        this.Takingvaluefromelement(element)       
+        element.removeEventListener('blur', this.bluring)
+    }
+    Takingvaluefromelement=(element)=>{
+        let attribute=this.table.cells.datacell[this.cellname].corespondingatt        
+        let childselector=this.table.cells.datacell[this.cellname].childselector
+        let value;
+        if(childselector){                     
+            value=element.querySelector(`${childselector}`)[attribute]           
+        }else{
+            value=element[attribute]
+        }        
+        this.table.rows[this.selectedrowno-1][this.cellname]=value
     }
     addingstyle(ele){
         ele.style.position = 'relative';
