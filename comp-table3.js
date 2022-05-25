@@ -405,6 +405,7 @@ class mycomponent extends HTMLElement {
         let attribute = Element.getAttribute('cell')
         let rowsLength = this.table.columns.length
         if (attribute === 'columncell') {
+            this.selectedcell=undefined
             let columnNo = Element.getAttribute('columnNo') / 1 + 1
             this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `::slotted(*:nth-child(${rowsLength + 1}n+${columnNo}))`;
         } else if (attribute === 'rowcell') {
@@ -429,6 +430,7 @@ class mycomponent extends HTMLElement {
         return returnvalue
     }
     highlightingrow(inputelement) {
+        this.selectedcell=undefined
         this.selectedrowno = (inputelement.innerHTML) / 1
         this.selectedrow = inputelement
         let rowsLength = this.table.columns.length
@@ -437,7 +439,7 @@ class mycomponent extends HTMLElement {
         let end = start + rowsLength
         this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `::slotted(*:nth-child(n+${start}):nth-child(-n+${end}))`;
     }
-    highlightingcells(cell) {           
+    highlightingcells(cell) {          
         cell.focus({preventScroll:true})
         this.selectedcell = cell               
         let index = this.findingindex(cell)
@@ -498,7 +500,7 @@ class mycomponent extends HTMLElement {
         }
     }
     editing=()=>{
-       if(this.selectedcell){
+       if(this.selectedcell){           
           let index=this.findingindex(this.selectedcell)
           let rowsLength=this.table.columns.length+1
           let column=(index%rowsLength)-1
@@ -551,7 +553,7 @@ class mycomponent extends HTMLElement {
         this.Rowheight = this.getAttribute('rowheight')
         // document.styleSheets[0].cssRules[1].style.gridAutoRows = `${this.Rowheight}px`
         let lengthOfRows = this.table.rows.length
-        let overall = this.shadowRoot.querySelector('.overall')
+        let overall = this.shadowRoot.querySelector('.overall')        
         overall.style.height = this.tableheight + 'px'
         this.shadowRoot.querySelector('.dummy').style.height = (this.Rowheight * lengthOfRows) + 20 + 'px'
         this.NoOfRowsforBlock = Math.floor((this.tableheight / this.Rowheight))
