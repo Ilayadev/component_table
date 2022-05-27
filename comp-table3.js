@@ -17,14 +17,14 @@ template.innerHTML = `<style>
     width: 100%;    
     grid-auto-rows:auto;
     scroll-behavior: smooth;  
+    position:relative;
 }
 .dummy{
     height: 20px;}    
 .overall{
     overflow-y: auto;
     width: 100%;   
-    display:flex;
-    position:relative;     
+    display:flex;          
 }
 ::slotted(.header){
     background-color: #fff;
@@ -35,12 +35,33 @@ template.innerHTML = `<style>
     height:20px
     cursor:pointer;
 }
-.compelement{
-    background-color: rgb(191, 240, 191);  
-    border: 1px solid lightgreen !important;   
+.compelement{   
+    border: 1px solid #13ad6b !important;   
+}
+::slotted(*){
+    border:1px solid #dedede !important;
+}
+.editor{
+    position:absolute;
+    border:1px solid #13ad6b ;
+    background-color:#fff;
+    z-index:20;
+    outline:none;
+    padding:2px 4px ;
+    display:none;
+}
+.editor:after{
+    content: attr(editingcolumnrow);
+    left: -1px;
+    position: absolute;
+    bottom: 100%;
+    background-color: #17a366;
+    color: white;
+    padding: 2px 5px;
 }
 </style>
 <div class='overall'>
+<div class=editor></div>
 <div class="main" >
     <div class="container">  
       <slot name="columncell"></slot>   
@@ -89,7 +110,7 @@ class mycomponent extends HTMLElement {
     previousmainscrolltop = 0
     currentBlocks = []
     Rowheight = 0
-    throttlingofOverall = false
+    // throttlingofOverall = false
     MainElement = true
     overallElement = true
     checkingOverallElement = false
@@ -119,7 +140,7 @@ class mycomponent extends HTMLElement {
                 if (this.selectedrowno > start) {
                     if (this.Highlighted === 'rowcell') {
                         checkinghighlightrow = true
-                    } else {
+                    } else if (this.Highlighted === 'datacell') {
                         checkinghighlightcell = true
                     }
                 }
@@ -167,9 +188,6 @@ class mycomponent extends HTMLElement {
                     let InorOut = this.checkingTheElementInorOut(this.selectedrowno)
                     if (!InorOut) {
                         this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `.nothing`;
-                        // if (this.Highlighted === 'row') {
-                        //     this.shadowRoot.styleSheets[0].cssRules[8].selectorText = `.nothing`
-                        // }
                     } else {
                         if (this.Highlighted === 'rowcell') {
                             this.highlightingrow(this.selectedrow)
@@ -201,7 +219,7 @@ class mycomponent extends HTMLElement {
             if (this.selectedrowno > start) {
                 if (this.Highlighted === 'rowcell') {
                     checkinghighlightrow = true
-                } else {
+                } else if (this.Highlighted === 'datacell') {
                     checkinghighlightcell = true
                 }
             }
@@ -245,9 +263,6 @@ class mycomponent extends HTMLElement {
                 let InorOut = this.checkingTheElementInorOut(this.selectedrowno)
                 if (!InorOut) {
                     this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `.nothing`;
-                    // if (this.Highlighted === 'row') {
-                    //     this.shadowRoot.styleSheets[0].cssRules[8].selectorText = `.nothing`
-                    // }
                 } else {
                     if (this.Highlighted === 'rowcell') {
                         this.highlightingrow(this.selectedrow)
@@ -443,7 +458,10 @@ class mycomponent extends HTMLElement {
         this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `::slotted(*:nth-child(n+${start}):nth-child(-n+${end}))`;
     }
     highlightingcells(cell) {
-        cell.focus({ preventScroll: true })
+        this.Checkingelementinviewport(cell)
+        if (!this.editor) {
+            cell.focus({ preventScroll: true })
+        }
         this.selectedcell = cell
         let index = this.findingindex(cell)
         let rowsLength = this.table.columns.length + 1
@@ -456,8 +474,8 @@ class mycomponent extends HTMLElement {
         let main = this.shadowRoot.querySelector('.main')
         let rowsLength = this.table.columns.length + 1
         let index;
-        if (e.keyCode >= 37 && e.keyCode <= 40||e.keyCode===13) {                         
-            if(!this.editor){
+        if (e.keyCode >= 37 && e.keyCode <= 40) {
+            if (!this.editor) {
                 e.preventDefault()
                 let element = e.target
                 let targetelement;
@@ -474,81 +492,114 @@ class mycomponent extends HTMLElement {
                 }
                 if (targetelement) {
                     if (targetelement.getAttribute('cell') === 'datacell') {
-                        let top = targetelement.getBoundingClientRect().top
-                        let topbyprecentage = top % this.Rowheight
-                        if (e.keyCode === 40) {
-                            if (top > (this.tableheight - this.Rowheight)) {
-                                if (top >= this.tableheight) {
-                                    main.scrollBy(0, `${this.Rowheight}`)
-                                } else {
-                                    main.scrollBy(0, topbyprecentage)
-                                }
-                            }
-                        } else if (e.keyCode === 38) {
-                            if (top < this.Rowheight) {
-                                if (top === 0) {
-                                    main.scrollBy(0, -`${this.Rowheight}`)
-                                } else {
-                                    main.scrollBy(0, -`${this.Rowheight - top}`)
-                                }
-                            }
-                        }
                         if (!element.hasAttribute('contenteditable')) {
                             this.highlightingcells(targetelement)
                         }
                     }
                 }
-            }else{                
-                if(e.keyCode===13){
-                    e.preventDefault()
+            }
+        }
+        if (e.keyCode === 13) {
+            e.preventDefault()
+            if (!this.editor) {
+                this.editing()
+            } else {
+                this.editor = false
+                if (this.selectedcell.isConnected) {
+                    this.highlightingcells(this.selectedcell)
+                } else {
+                    this.bluring()
                 }
             }
-        }       
+        }
     }
-    editing = (e) => {        
+    editing = () => {
         if (this.selectedcell) {
             let index = this.findingindex(this.selectedcell)
             let rowsLength = this.table.columns.length + 1
             let column = (index % rowsLength) - 1
             let editable = this.table.columns[column].editable
             if (editable) {
-                this.editor=true
-                this.addingstyle(this.selectedcell)
-                this.selectedcell.setAttribute('contenteditable', 'true')
-                this.selectedcell.addEventListener('blur', this.bluring)
+                this.openingEditor(this.selectedcell)
             } else {
                 alert('This column cannot be edit')
             }
         }
     }
-    bluring = (e) => {
-        this.editor=false
-        let element = e.target
-        this.removingstyle(element)
-        element.removeAttribute('contenteditable') 
-        this.Takingvaluefromelement(element)       
-        element.removeEventListener('blur', this.bluring)
+    Checkingelementinviewport = (element) => {
+        let main = this.shadowRoot.querySelector('.main')
+        let top = element.getBoundingClientRect().top
+        let bottom = element.getBoundingClientRect().bottom
+        if (top < 20 || bottom > 600) {
+            if (top < 20) {
+                if (top === 0) {
+                    main.scrollBy(0, -`${this.Rowheight}`)
+                } else {
+                    main.scrollBy(0, -`${this.Rowheight - top}`)
+                }
+            } else {
+                if (bottom === (this.tableheight + this.Rowheight)) {
+                    main.scrollBy(0, `${this.Rowheight}`)
+                } else {
+                    main.scrollBy(0, `${bottom % this.tableheight}`)
+                }
+            }
+        }
     }
-    Takingvaluefromelement=(element)=>{
-        let attribute=this.table.cells.datacell[this.cellname].corespondingatt        
-        let childselector=this.table.cells.datacell[this.cellname].childselector
+    openingEditor = (element) => {
+        this.editor = true
+        let left = element.getBoundingClientRect().left
+        let top = element.getBoundingClientRect().top
+        let width = element.getBoundingClientRect().width
+        let height = element.getBoundingClientRect().height
+        let editor = this.shadowRoot.querySelector('.editor')
+        editor.style.left = `${left}px`;
+        editor.style.top = `${top}px`;
+        editor.style.minWidth = `${width}px`;
+        editor.addEventListener('blur', this.bluring)
+        if (!editor.hasAttribute('contenteditable')) {
+            editor.setAttribute('contenteditable', 'true')
+        }
+        if (!editor.hasAttribute('tabindex')) {
+            editor.setAttribute('tabindex', 0)
+        }
+        editor.setAttribute('editingcolumnrow', `${this.cellname}${this.selectedrowno}`)
+        editor.style.display = 'block';
+        editor.innerText = this.table.rows[this.selectedrowno - 1][this.cellname]
+        editor.focus({ preventScroll: true })       
+    }
+    bluring = () => {
+        this.editor = false
+        let editor = this.shadowRoot.querySelector('.editor')
+        editor.style.display = 'none'
+        let value = this.Takingvaluefromelement('editor')
+        if (this.selectedcell.isConnected) {
+            let child = this.table.cells.datacell[this.cellname].childselector
+            let att = this.table.cells.datacell[this.cellname].corespondingatt
+            if (child) {
+                this.selectedcell.querySelector(`${child}`)[att] = value
+            } else {
+                this.selectedcell[att] = value
+            }
+        }
+        this.table.rows[this.selectedrowno - 1][this.cellname] = value
+        editor.removeEventListener('blur', this.bluring)
+    }
+    Takingvaluefromelement = (from) => {
         let value;
-        if(childselector){                     
-            value=element.querySelector(`${childselector}`)[attribute]           
-        }else{
-            value=element[attribute]
-        }        
-        this.table.rows[this.selectedrowno-1][this.cellname]=value
-    }
-    addingstyle(ele){
-        ele.style.position = 'relative';
-        ele.style.top = '-1px';
-        ele.style.left = '-2px';
-        ele.style.boxShadow = '2px 3px 4px 0px gray';
-    }
-    removingstyle(ele){
-        ele.style.position = 'static';
-        ele.style.boxShadow = 'none';
+        if (from === 'element') {
+            let cell = this.table.cells.datacell[this.cellname]
+            let child = cell.childselector
+            let att = cell.corespondingatt
+            if (child) {
+                value = this.selectedcell.querySelector(`${child}`)[att]
+            } else {
+                value = this.selectedcell[att]
+            }
+        } else if (from === 'editor') {
+            value = this.shadowRoot.querySelector('.editor').innerText
+        }
+        return value
     }
     findingindex(e) {
         let att = e.hasAttribute('cell')
@@ -583,6 +634,7 @@ class mycomponent extends HTMLElement {
     }
     connectedCallback() {
         this.tableheight = this.getAttribute('tableheight')
+        let container = this.shadowRoot.querySelector('.container')
         let data = this.getAttribute('data')
         this.table = JSON.parse(data)
         this.CreatingColumns()
@@ -599,7 +651,7 @@ class mycomponent extends HTMLElement {
         }
         let main = this.shadowRoot.querySelector('.main')
         main.addEventListener('scroll', this.MainElementScrolling)
-        overall.addEventListener('click', this.highlighting)
+        container.addEventListener('click', this.highlighting)
         overall.addEventListener('scroll', this.overallElementScrolling)
         overall.addEventListener('keydown', this.Keyoperating)
         overall.addEventListener('dblclick', this.editing)
