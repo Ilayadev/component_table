@@ -348,7 +348,7 @@ class mycomponent extends HTMLElement {
             this.checkingOverallElement = true
             if (this.TotalNoOfBlocks > 3) {
                 if (scrolltop >= this.previousmainscrolltop) {
-                    if (scrolltop >= 1220) {
+                    if (scrolltop===bottom) {
                         // this.CheckingGenratedBlocks(this.block,"forward")
                         this.renderingRowsForward(this.block + 1, true)
                         if (this.block === this.TotalNoOfBlocks) {
@@ -530,8 +530,8 @@ class mycomponent extends HTMLElement {
         let main = this.shadowRoot.querySelector('.main')
         let top = element.getBoundingClientRect().top
         let bottom = element.getBoundingClientRect().bottom
-        if (top < 20 || bottom > 600) {
-            if (top < 20) {
+        if (top < this.Rowheight || bottom > this.tableheight) {
+            if (top < this.Rowheight) {
                 if (top === 0) {
                     main.scrollBy(0, -`${this.Rowheight}`)
                 } else {
@@ -556,6 +556,7 @@ class mycomponent extends HTMLElement {
         editor.style.left = `${left}px`;
         editor.style.top = `${top}px`;
         editor.style.minWidth = `${width}px`;
+        editor.style.minHeight = `${height}px`;
         editor.addEventListener('blur', this.bluring)
         if (!editor.hasAttribute('contenteditable')) {
             editor.setAttribute('contenteditable', 'true')
