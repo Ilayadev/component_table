@@ -348,7 +348,7 @@ class mycomponent extends HTMLElement {
             this.checkingOverallElement = true
             if (this.TotalNoOfBlocks > 3) {
                 if (scrolltop >= this.previousmainscrolltop) {
-                    if (scrolltop >= 1220) {
+                    if (scrolltop===bottom) {
                         // this.CheckingGenratedBlocks(this.block,"forward")
                         this.renderingRowsForward(this.block + 1, true)
                         if (this.block === this.TotalNoOfBlocks) {
