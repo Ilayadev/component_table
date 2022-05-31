@@ -32,11 +32,16 @@ template.innerHTML = `<style>
     font-size: medium;
     font-weight: 700;
     top: 0;
+    z-index:4;
     height:20px
     cursor:pointer;
 }
-.compelement{   
+.datacell{   
     border: 1px solid #13ad6b !important;   
+}
+.rowcolumncell{
+    border: 1px solid #13ad6b !important; 
+    background-color:#13ad6b;
 }
 ::slotted(*){
     border:1px solid #dedede !important;
@@ -48,7 +53,7 @@ template.innerHTML = `<style>
     z-index:20;
     outline:none;
     padding:2px 4px ;
-    display:none;
+    display:none;   
 }
 .editor:after{
     content: attr(editingcolumnrow);
@@ -59,12 +64,22 @@ template.innerHTML = `<style>
     color: white;
     padding: 2px 5px;
 }
+.overlapingelement{
+    position:absolute;
+    border:1px solid #17a366;
+    z-index:2;
+    display:none;
+    background-color:#accef7;
+    opacity:0.4;
+    pointer-events:none;
+}
 </style>
 <div class='overall'>
 <div class=editor></div>
 <div class="main" >
     <div class="container">  
-      <slot name="columncell"></slot>   
+      <slot name="columncell"></slot>    
+      <div class='overlapingelement'></div>
     </div>
 </div>
 <div class="dummy"></div>
@@ -103,6 +118,7 @@ class mycomponent extends HTMLElement {
     tableheight = 0
     NoOfRowsforBlock = 0
     preblock = 0
+    currentblock = 1
     block = 0
     TotalNoOfBlocks = 0
     previousoverallscrolltop = 0
@@ -137,6 +153,7 @@ class mycomponent extends HTMLElement {
                 this.block = number
                 this.currentBlocks.push(number)
                 this.preblock = number - 2
+                let insertingelement = container.lastElementChild
                 if (this.selectedrowno > start) {
                     if (this.Highlighted === 'rowcell') {
                         checkinghighlightrow = true
@@ -151,7 +168,7 @@ class mycomponent extends HTMLElement {
                         serialslot.name = `row${i + 1}`
                         serialElement.setAttribute('cell', 'rowcell')
                         serialElement.slot = `row${i + 1}`
-                        container.appendChild(serialslot)
+                        container.insertBefore(serialslot, insertingelement)
                         this.appendChild(serialElement)
                         if (checkinghighlightrow) {
                             if (this.selectedrowno === i + 1) {
@@ -167,7 +184,7 @@ class mycomponent extends HTMLElement {
                             element.setAttribute('cell', 'datacell')
                             element.setAttribute('tabindex', 0)
                             slot.name = `${name}${i + 1}`
-                            container.appendChild(slot)
+                            container.insertBefore(slot, insertingelement)
                             element.slot = `${name}${i + 1}`
                             this.appendChild(element)
                             if (checkinghighlightcell) {
@@ -178,7 +195,7 @@ class mycomponent extends HTMLElement {
                                 }
                             }
                         })
-                    } else  break
+                    } else break
                 }
                 if (removeelement) {
                     this.currentBlocks.shift()
@@ -188,6 +205,7 @@ class mycomponent extends HTMLElement {
                     let InorOut = this.checkingTheElementInorOut(this.selectedrowno)
                     if (!InorOut) {
                         this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `.nothing`;
+                        this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `.nothing`;
                     } else {
                         if (this.Highlighted === 'rowcell') {
                             this.highlightingrow(this.selectedrow)
@@ -263,6 +281,7 @@ class mycomponent extends HTMLElement {
                 let InorOut = this.checkingTheElementInorOut(this.selectedrowno)
                 if (!InorOut) {
                     this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `.nothing`;
+                    this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `.nothing`;
                 } else {
                     if (this.Highlighted === 'rowcell') {
                         this.highlightingrow(this.selectedrow)
@@ -298,30 +317,22 @@ class mycomponent extends HTMLElement {
             this.checkingMainElement = true
             if (this.TotalNoOfBlocks > 3) {
                 let block = Math.ceil(scrolltop / this.tableheight)
-                if (overall.scrollTop > this.previousoverallscrolltop) {
-                    if (scrolltop === bottom) {
-                        block = this.TotalNoOfBlocks - 1
-                    }
-                    if (block !== 1) {
-                        this.scrollvariable = 1
-                        this.CheckingGenratedBlocks(block, "forward")
+                if (block !== this.currentblock) {
+                    if (overall.scrollTop > this.previousoverallscrolltop) {
+                        if (scrolltop === bottom) {
+                            block = this.TotalNoOfBlocks - 1
+                        }
+                        if (block !== 1) {
+                            this.CheckingGenratedBlocks(block, "forward")
+                        }
                     } else {
-                        this.scrollvariable = 0
+                        if (scrolltop === 0 || block === 1) {
+                            block = 2
+                        }
+                        this.CheckingGenratedBlocks(block, "backward")
                     }
+                    this.currentblock = block
                 } else {
-                    this.scrollvariable = 0
-                    if (scrolltop === 0 || block === 1) {
-                        block = 2
-                    }
-                    this.CheckingGenratedBlocks(block, "backward")
-                }
-                if (scrolltop === bottom) {
-                    main.scrollTop = (2 * this.tableheight) + this.Rowheight
-                } else if (scrolltop === 0) {
-                    main.scrollTop = 0
-                }
-                else {
-                    main.scrollTop = (this.scrollvariable * (this.NoOfRowsforBlock * this.Rowheight)) + (scrolltop % this.tableheight)
 
                 }
             }
@@ -332,6 +343,17 @@ class mycomponent extends HTMLElement {
         this.previousoverallscrolltop = overall.scrollTop
     }
     MainElementScrolling = () => {
+        if (this.Highlighted === 'rowcell' || this.Highlighted === "columncell") {
+            if (this.Highlighted === 'rowcell') {
+                let top = this.selectedrow.getBoundingClientRect().top
+                let bottom = this.selectedrow.getBoundingClientRect().bottom
+                if (top >= 0 && bottom < 620) {
+                    this.overlapingelement(this.selectedrow, 'row')
+                } else {
+                    this.shadowRoot.querySelector('.overlapingelement').style.display = 'none'
+                }
+            }
+        }
         if (this.checkingMainElement === true) {
             this.checkingMainElement = false
             this.MainElement = false
@@ -348,7 +370,7 @@ class mycomponent extends HTMLElement {
             this.checkingOverallElement = true
             if (this.TotalNoOfBlocks > 3) {
                 if (scrolltop >= this.previousmainscrolltop) {
-                    if (scrolltop===bottom) {
+                    if (scrolltop === bottom) {
                         // this.CheckingGenratedBlocks(this.block,"forward")
                         this.renderingRowsForward(this.block + 1, true)
                         if (this.block === this.TotalNoOfBlocks) {
@@ -398,7 +420,7 @@ class mycomponent extends HTMLElement {
         let columns_length = this.table.columns.length
         let NoOfchildForThreeBlocks = ((this.NoOfRowsforBlock * (columns_length + 1)) * 3) + (columns_length + 1)
         let totalNoOfChildrens = this.childElementCount
-        for (let i = 0; i < totalNoOfChildrens; i++) {
+        for (let i = NoOfchildForThreeBlocks; i < totalNoOfChildrens; i++) {
             if (this.children[NoOfchildForThreeBlocks]) {
                 this.children[NoOfchildForThreeBlocks].remove()
                 container.children[NoOfchildForThreeBlocks - columns_length].remove()
@@ -419,19 +441,31 @@ class mycomponent extends HTMLElement {
         }
     }
     highlighting = (e) => {
-        let Element = e.target
+        let pathlenght = e.path.length
+        let Element=e.path[pathlenght-11]          
         let attribute = Element.getAttribute('cell')
-        let rowsLength = this.table.columns.length
         if (attribute === 'columncell') {
+            this.Highlighted=attribute
+            let overlapelement = this.shadowRoot.querySelector('.overlapingelement')
+            let width = Element.offsetWidth
+            overlapelement.style.display = 'block'
+            overlapelement.style.width = `${width}px`;
+            overlapelement.style.height = `100%`
+            this.overlapingelement(Element)
             this.selectedcell = undefined
             let columnNo = Element.getAttribute('columnNo') / 1 + 1
-            this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `::slotted(*:nth-child(${rowsLength + 1}n+${columnNo}))`;
+            this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(${columnNo}))`;
+            this.shadowRoot.styleSheets[0].cssRules[6].selectorText = 'nothing'
         } else if (attribute === 'rowcell') {
+            let overlapelement = this.shadowRoot.querySelector('.overlapingelement')
+            let height = Element.offsetHeight
+            overlapelement.style.display = 'block'
+            overlapelement.style.width = `100%`
+            overlapelement.style.height = `${height}px`
             this.highlightingrow(Element)
         } else if (attribute === 'datacell') {
             this.highlightingcells(Element)
-        }
-        this.Highlighted = attribute
+        }        
     }
     checkingTheElementInorOut(ip) {
         let returnvalue = false
@@ -448,27 +482,43 @@ class mycomponent extends HTMLElement {
         return returnvalue
     }
     highlightingrow(inputelement) {
+        this.Highlighted='rowcell'
         this.selectedcell = undefined
         this.selectedrowno = (inputelement.innerHTML) / 1
         this.selectedrow = inputelement
-        let rowsLength = this.table.columns.length
+        // let rowsLength = this.table.columns.length
+        this.overlapingelement(inputelement, 'row')
         let index = this.findingindex(inputelement)
-        let start = index + 1
-        let end = start + rowsLength
-        this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `::slotted(*:nth-child(n+${start}):nth-child(-n+${end}))`;
+        // let start = index + 1
+        // let end = start + rowsLength
+        this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(${index + 1})`;
+        this.shadowRoot.styleSheets[0].cssRules[6].selectorText = 'nothing'
     }
-    highlightingcells(cell) {
+    highlightingcells(cell) {       
         this.Checkingelementinviewport(cell)
         if (!this.editor) {
             cell.focus({ preventScroll: true })
         }
-        this.selectedcell = cell       
+        if(this.Highlighted==='rowcell'||this.Highlighted==='columncell'){
+            this.shadowRoot.querySelector('.overlapingelement').style.display='none'
+        }
+        this.Highlighted='datacell'
+        this.selectedcell = cell
         let index = this.findingindex(cell)
         let rowsLength = this.table.columns.length + 1
         let cellrow = Math.floor(index / rowsLength)
         this.cellname = this.table.columns[(index % rowsLength) - 1].title
         this.selectedrowno = (this.children[cellrow * rowsLength].innerHTML) / 1
         this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `::slotted(*:nth-child(${index + 1})`;
+        this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `nothing`;
+    }
+    overlapingelement = (element, cell) => {
+        let left = element.offsetLeft
+        let top = element.offsetTop
+        let overlapele = this.shadowRoot.querySelector('.overlapingelement')
+        overlapele.style.display = 'block'
+        overlapele.style.left = `${left}px`       
+        overlapele.style.top = `${top}px`
     }
     Keyoperating = (e) => {
         let main = this.shadowRoot.querySelector('.main')
@@ -530,8 +580,8 @@ class mycomponent extends HTMLElement {
         let main = this.shadowRoot.querySelector('.main')
         let top = element.getBoundingClientRect().top
         let bottom = element.getBoundingClientRect().bottom
-        if (top < 20 || bottom > 600) {
-            if (top < 20) {
+        if (top < this.Rowheight || bottom > this.tableheight) {
+            if (top < this.Rowheight) {
                 if (top === 0) {
                     main.scrollBy(0, -`${this.Rowheight}`)
                 } else {
@@ -556,6 +606,7 @@ class mycomponent extends HTMLElement {
         editor.style.left = `${left}px`;
         editor.style.top = `${top}px`;
         editor.style.minWidth = `${width}px`;
+        editor.style.minHeight = `${height}px`;
         editor.addEventListener('blur', this.bluring)
         if (!editor.hasAttribute('contenteditable')) {
             editor.setAttribute('contenteditable', 'true')
@@ -566,7 +617,7 @@ class mycomponent extends HTMLElement {
         editor.setAttribute('editingcolumnrow', `${this.cellname}${this.selectedrowno}`)
         editor.style.display = 'block';
         editor.innerText = this.table.rows[this.selectedrowno - 1][this.cellname]
-        editor.focus({ preventScroll: true })       
+        editor.focus({ preventScroll: true })
     }
     bluring = () => {
         this.editor = false
