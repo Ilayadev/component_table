@@ -441,7 +441,8 @@ class mycomponent extends HTMLElement {
         }
     }
     highlighting = (e) => {
-        let Element = e.target
+        let pathlenght = e.path.length
+        let Element=e.path[pathlenght-11]          
         let attribute = Element.getAttribute('cell')
         if (attribute === 'columncell') {
             this.Highlighted=attribute
