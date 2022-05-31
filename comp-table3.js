@@ -141,19 +141,30 @@ class mycomponent extends HTMLElement {
         let ele = document.createElement(NameOfElement)
         return ele
     }
-    renderingRowsForward = (number, removeelement) => {
+    renderingcells = (number,direction, removeelement) => {
         let container = this.shadowRoot.querySelector('.container')
         let checkinghighlightrow = false
         let checkinghighlightcell = false
         if (this.TotalNoOfBlocks >= number) {
-            if (!this.currentBlocks.includes(number) && number !== 0) {
+            if (!this.currentBlocks.includes(number) && number !== 0 && number <= this.TotalNoOfBlocks) {
                 let end = number * this.NoOfRowsforBlock
                 let start = end - this.NoOfRowsforBlock
                 let rows = this.table.rows
-                this.block = number
-                this.currentBlocks.push(number)
-                this.preblock = number - 2
-                let insertingelement = container.lastElementChild
+                let slotinserting;
+                let elementinserting;
+                let columns_length = this.table.columns.length
+                if(direction==='forward'){
+                    this.block = number
+                    this.currentBlocks.push(number)
+                    this.preblock = number - 2
+                    slotinserting = container.lastElementChild
+                }else{
+                    slotinserting = container.children[1]
+                    elementinserting = this.children[columns_length + 1]
+                    this.currentBlocks.unshift(number)
+                    this.preblock = number
+                    this.block = number + 2
+                }                
                 if (this.selectedrowno > start) {
                     if (this.Highlighted === 'rowcell') {
                         checkinghighlightrow = true
@@ -168,8 +179,12 @@ class mycomponent extends HTMLElement {
                         serialslot.name = `row${i + 1}`
                         serialElement.setAttribute('cell', 'rowcell')
                         serialElement.slot = `row${i + 1}`
-                        container.insertBefore(serialslot, insertingelement)
-                        this.appendChild(serialElement)
+                        container.insertBefore(serialslot, slotinserting)
+                       if(direction==='forward'){
+                           this.appendChild(serialElement)
+                       }else{
+                          this.insertBefore(serialElement, elementinserting)
+                       }
                         if (checkinghighlightrow) {
                             if (this.selectedrowno === i + 1) {
                                 this.highlightingrow(serialElement)
@@ -184,9 +199,13 @@ class mycomponent extends HTMLElement {
                             element.setAttribute('cell', 'datacell')
                             element.setAttribute('tabindex', 0)
                             slot.name = `${name}${i + 1}`
-                            container.insertBefore(slot, insertingelement)
+                            container.insertBefore(slot, slotinserting)
                             element.slot = `${name}${i + 1}`
-                            this.appendChild(element)
+                            if(direction==='forward'){
+                                this.appendChild(element)
+                            }else{
+                               this.insertBefore(element, elementinserting)
+                            }
                             if (checkinghighlightcell) {
                                 if (this.selectedrowno === i + 1) {
                                     if (name === this.cellname) {
@@ -198,8 +217,15 @@ class mycomponent extends HTMLElement {
                     } else break
                 }
                 if (removeelement) {
-                    this.currentBlocks.shift()
-                    this.RemovingTopMostElements()
+                    if(direction==='forward'){
+                        this.currentBlocks.shift()
+                        this.RemovingTopMostElements()
+                    }else{
+                        let main=this.shadowRoot.querySelector('.main')
+                        this.currentBlocks.pop()   
+                        this.RemovingDownMostElement()
+                         main.scrollTop = this.tableheight
+                    }
                 }
                 if (this.Highlighted === 'rowcell' || this.Highlighted === 'datacell') {
                     let InorOut = this.checkingTheElementInorOut(this.selectedrowno)
@@ -217,81 +243,73 @@ class mycomponent extends HTMLElement {
             }
         }
     }
-    renderingRowsBackward(number) {
-        let main = this.shadowRoot.querySelector('.main')
-        let container = this.shadowRoot.querySelector('.container')
-        let checkinghighlightrow = false
-        let checkinghighlightcell = false
-        if (!this.currentBlocks.includes(number) && number !== 0 && number <= this.TotalNoOfBlocks) {
-            let end = number * this.NoOfRowsforBlock
-            let start = end - this.NoOfRowsforBlock
-            let rows = this.table.rows
-            this.currentBlocks.unshift(number)
-            this.currentBlocks.pop()
-            this.preblock = number
-            this.block = number + 2
-            let column = this.table.columns
-            let columns_length = column.length
-            let slotinserting = container.children[1]
-            let elementinserting = this.children[columns_length + 1]
-            if (this.selectedrowno > start) {
-                if (this.Highlighted === 'rowcell') {
-                    checkinghighlightrow = true
-                } else if (this.Highlighted === 'datacell') {
-                    checkinghighlightcell = true
-                }
-            }
-            for (let i = start; i < end; i++) {
-                let serialElement = this.generatingElements(this.table.cells.rowcell, i + 1)
-                let serialslot = this.CreatingElement('slot')
-                serialElement.setAttribute('cell', 'rowcell')
-                serialslot.name = `row${i + 1}`
-                serialElement.slot = `row${i + 1}`
-                container.insertBefore(serialslot, slotinserting)
-                this.insertBefore(serialElement, elementinserting)
-                if (checkinghighlightrow) {
-                    if (this.selectedrowno === i + 1) {
-                        this.highlightingrow(serialElement)
-                    }
-                }
-                column.forEach(x => {
-                    let name = x.title
-                    let value = rows[i][name]
-                    let element = this.generatingElements(this.table.cells.datacell[name], value)
-                    let slot = this.CreatingElement('slot')
-                    element.setAttribute('cell', 'datacell')
-                    element.setAttribute('tabindex', 0)
-                    slot.name = `${name}${i + 1}`
-                    element.slot = `${name}${i + 1}`
-                    container.insertBefore(slot, slotinserting)
-                    this.insertBefore(element, elementinserting)
-                    if (checkinghighlightcell) {
-                        if (this.selectedrowno === i + 1) {
-                            if (name === this.cellname) {
-                                this.highlightingcells(element)
-                            }
-                        }
-                    }
+    // renderingcells(number) {
+    //     let main = this.shadowRoot.querySelector('.main')
+    //     let container = this.shadowRoot.querySelector('.container')
+    //     let checkinghighlightrow = false
+    //     let checkinghighlightcell = false
+    //     if (!this.currentBlocks.includes(number) && number !== 0 && number <= this.TotalNoOfBlocks) {
+    //         let end = number * this.NoOfRowsforBlock
+    //         let start = end - this.NoOfRowsforBlock
+    //         let rows = this.table.rows                    
+    //         let column = this.table.columns            
+    //         let slotinserting = container.children[1]
+    //         let elementinserting = this.children[columns_length + 1]
+    //         if (this.selectedrowno > start) {
+    //             if (this.Highlighted === 'rowcell') {
+    //                 checkinghighlightrow = true
+    //             } else if (this.Highlighted === 'datacell') {
+    //                 checkinghighlightcell = true
+    //             }
+    //         }
+    //         for (let i = start; i < end; i++) {
+    //             let serialElement = this.generatingElements(this.table.cells.rowcell, i + 1)
+    //             let serialslot = this.CreatingElement('slot')
+    //             serialElement.setAttribute('cell', 'rowcell')
+    //             serialslot.name = `row${i + 1}`
+    //             serialElement.slot = `row${i + 1}`
+    //             container.insertBefore(serialslot, slotinserting)               
+    //             if (checkinghighlightrow) {
+    //                 if (this.selectedrowno === i + 1) {
+    //                     this.highlightingrow(serialElement)
+    //                 }
+    //             }
+    //             column.forEach(x => {
+    //                 let name = x.title
+    //                 let value = rows[i][name]
+    //                 let element = this.generatingElements(this.table.cells.datacell[name], value)
+    //                 let slot = this.CreatingElement('slot')
+    //                 element.setAttribute('cell', 'datacell')
+    //                 element.setAttribute('tabindex', 0)
+    //                 slot.name = `${name}${i + 1}`
+    //                 element.slot = `${name}${i + 1}`
+    //                 container.insertBefore(slot, slotinserting)
+    //                 this.insertBefore(element, elementinserting)
+    //                 if (checkinghighlightcell) {
+    //                     if (this.selectedrowno === i + 1) {
+    //                         if (name === this.cellname) {
+    //                             this.highlightingcells(element)
+    //                         }
+    //                     }
+    //                 }
 
-                })
-            }
-            this.RemovingDownMostElement()
-            main.scrollTop = this.tableheight
-            if (this.Highlighted === 'rowcell' || this.Highlighted === 'datacell') {
-                let InorOut = this.checkingTheElementInorOut(this.selectedrowno)
-                if (!InorOut) {
-                    this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `.nothing`;
-                    this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `.nothing`;
-                } else {
-                    if (this.Highlighted === 'rowcell') {
-                        this.highlightingrow(this.selectedrow)
-                    } else {
-                        this.highlightingcells(this.selectedcell)
-                    }
-                }
-            }
-        }
-    }
+    //             })
+    //         }            
+    //         if (this.Highlighted === 'rowcell' || this.Highlighted === 'datacell') {
+    //             let InorOut = this.checkingTheElementInorOut(this.selectedrowno)
+    //             if (!InorOut) {
+    //                 this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `.nothing`;
+    //                 this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `.nothing`;
+    //             } else {
+    //                 if (this.Highlighted === 'rowcell') {
+    //                     this.highlightingrow(this.selectedrow)
+    //                 } else {
+    //                     this.highlightingcells(this.selectedcell)
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
     // throttlingthesroll=(callback,time)=>{        
     //     if(this.throttlingofOverall)return
     //     this.throttlingofOverall=true
@@ -372,7 +390,7 @@ class mycomponent extends HTMLElement {
                 if (scrolltop >= this.previousmainscrolltop) {
                     if (scrolltop === bottom) {
                         // this.CheckingGenratedBlocks(this.block,"forward")
-                        this.renderingRowsForward(this.block + 1, true)
+                        this.renderingcells(this.block + 1,'forward', true)
                         if (this.block === this.TotalNoOfBlocks) {
                             overall.scrollTop = overall.scrollHeight - this.tableheight
                         }
@@ -383,7 +401,7 @@ class mycomponent extends HTMLElement {
                 } else {
                     if (scrolltop === 0) {
                         // this.CheckingGenratedBlocks(this.preblock,"backward")  
-                        this.renderingRowsBackward(this.preblock - 1)
+                        this.renderingcells(this.preblock - 1,'backward',true)
                         if (this.preblock === 1) {
                             overall.scrollTop = 0
                         }
@@ -431,13 +449,13 @@ class mycomponent extends HTMLElement {
         let previous = number - 1
         let next = number + 1
         if (direction === 'forward') {
-            this.renderingRowsForward(previous, true)
-            this.renderingRowsForward(number, true)
-            this.renderingRowsForward(next, true)
+            this.renderingcells(previous,'forward', true)
+            this.renderingcells(number,'forward', true)
+            this.renderingcells(next,'forward', true)
         } else {
-            this.renderingRowsBackward(next)
-            this.renderingRowsBackward(number)
-            this.renderingRowsBackward(previous)
+            this.renderingcells(next,'backward',true)
+            this.renderingcells(number,'backward',true)
+            this.renderingcells(previous,'backward',true)
         }
     }
     highlighting = (e) => {
@@ -698,7 +716,7 @@ class mycomponent extends HTMLElement {
         this.NoOfRowsforBlock = Math.floor((this.tableheight / this.Rowheight))
         this.TotalNoOfBlocks = Math.ceil((lengthOfRows / this.NoOfRowsforBlock))
         for (let i = 1; i <= 3; i++) {
-            this.renderingRowsForward(i, false)
+            this.renderingcells(i, 'forward',false)
         }
         let main = this.shadowRoot.querySelector('.main')
         main.addEventListener('scroll', this.MainElementScrolling)

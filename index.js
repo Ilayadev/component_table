@@ -323,9 +323,13 @@ class mycomponent extends HTMLElement {
                             block = this.TotalNoOfBlocks - 1
                         }
                         if (block !== 1) {
+                            this.scrollvariable=1
                             this.CheckingGenratedBlocks(block, "forward")
+                        }else{
+                            this.scrollvariable=0
                         }
                     } else {
+                        this.scrollvariable=0
                         if (scrolltop === 0 || block === 1) {
                             block = 2
                         }
@@ -333,7 +337,7 @@ class mycomponent extends HTMLElement {
                     }
                     this.currentblock = block
                 } else {
-
+                    main.scrollTop=this.scrollvariable*(this.NoOfRowsforBlock*this.Rowheight)+(scrolltop%this.tableheight)
                 }
             }
             else {
@@ -347,7 +351,7 @@ class mycomponent extends HTMLElement {
             if (this.Highlighted === 'rowcell') {
                 let top = this.selectedrow.getBoundingClientRect().top
                 let bottom = this.selectedrow.getBoundingClientRect().bottom
-                if (top >= 0 && bottom < 620) {
+                if (top >= 0 && bottom < (this.tableheight+this.Rowheight)) {
                     this.overlapingelement(this.selectedrow, 'row')
                 } else {
                     this.shadowRoot.querySelector('.overlapingelement').style.display = 'none'
