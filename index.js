@@ -410,7 +410,7 @@ class mycomponent extends HTMLElement {
                 this.highlightingrow(Element)
             }
         }
-        else {
+        else if(attribute==='datacell'){
             this.highlightingcells(Element)
         }
         this.Highlighted = attribute
