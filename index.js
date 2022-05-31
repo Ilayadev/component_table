@@ -444,6 +444,7 @@ class mycomponent extends HTMLElement {
         let Element = e.target
         let attribute = Element.getAttribute('cell')
         if (attribute === 'columncell') {
+            this.Highlighted=attribute
             let overlapelement = this.shadowRoot.querySelector('.overlapingelement')
             let width = Element.offsetWidth
             overlapelement.style.display = 'block'
@@ -463,8 +464,7 @@ class mycomponent extends HTMLElement {
             this.highlightingrow(Element)
         } else if (attribute === 'datacell') {
             this.highlightingcells(Element)
-        }
-        this.Highlighted = attribute
+        }        
     }
     checkingTheElementInorOut(ip) {
         let returnvalue = false
@@ -481,6 +481,7 @@ class mycomponent extends HTMLElement {
         return returnvalue
     }
     highlightingrow(inputelement) {
+        this.Highlighted='rowcell'
         this.selectedcell = undefined
         this.selectedrowno = (inputelement.innerHTML) / 1
         this.selectedrow = inputelement
@@ -492,7 +493,7 @@ class mycomponent extends HTMLElement {
         this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(${index + 1})`;
         this.shadowRoot.styleSheets[0].cssRules[6].selectorText = 'nothing'
     }
-    highlightingcells(cell) {
+    highlightingcells(cell) {       
         this.Checkingelementinviewport(cell)
         if (!this.editor) {
             cell.focus({ preventScroll: true })
@@ -500,6 +501,7 @@ class mycomponent extends HTMLElement {
         if(this.Highlighted==='rowcell'||this.Highlighted==='columncell'){
             this.shadowRoot.querySelector('.overlapingelement').style.display='none'
         }
+        this.Highlighted='datacell'
         this.selectedcell = cell
         let index = this.findingindex(cell)
         let rowsLength = this.table.columns.length + 1
@@ -514,8 +516,7 @@ class mycomponent extends HTMLElement {
         let top = element.offsetTop
         let overlapele = this.shadowRoot.querySelector('.overlapingelement')
         overlapele.style.display = 'block'
-        overlapele.style.left = `${left}px`
-        console.log(left)
+        overlapele.style.left = `${left}px`       
         overlapele.style.top = `${top}px`
     }
     Keyoperating = (e) => {
