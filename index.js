@@ -617,10 +617,10 @@ class mycomponent extends HTMLElement {
         if (child) {
             element = element.querySelector(`${child}`)
         }
-        if (att === 'innerText' || att === 'innerHTML') {
+        if (att === 'innerText' || att === 'innerHTML'||att==='checked') {
             element[att] = value
-        } else {
-            element.setAttribute(`${att}`, `${value}`)
+        } else {            
+            element.setAttribute(att, value)
         }
 
     }
