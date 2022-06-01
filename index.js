@@ -292,24 +292,24 @@ class mycomponent extends HTMLElement {
                         block = this.TotalNoOfBlocks - 1
                     }
                     if (block === this.currentBlocks[0]) {
-                        if (scrolltop % 600 !== 0) {
-                            main.scrollTop = scrolltop % 600
+                        if (scrolltop % this.tableheight !== 0) {
+                            main.scrollTop = scrolltop % this.tableheight
                         }
                     } else if (block === this.currentBlocks[1]) {
-                        if (scrolltop % 600 !== 0) {
-                            main.scrollTop = 600 + (scrolltop % 600)
+                        if (scrolltop % this.tableheight !== 0) {
+                            main.scrollTop = this.tableheight + (scrolltop % this.tableheight)
                         }
                     } else if (block >= this.currentBlocks[2]) {
                         this.CheckingGenratedBlocks(block, 'forward')
                     }
                 } else {
                     if (block === this.currentBlocks[1]) {
-                        if (scrolltop % 600 !== 0) {
-                            main.scrollTop = 600 + (scrolltop % 600)
+                        if (scrolltop % this.tableheight !== 0) {
+                            main.scrollTop = this.tableheight + (scrolltop % this.tableheight)
                         }
                     } else if (block <= this.currentBlocks[0]) {
-                        if (scrolltop % 600 !== 0) {
-                            main.scrollTop = (scrolltop % 600)
+                        if (scrolltop % this.tableheight !== 0) {
+                            main.scrollTop = (scrolltop % this.tableheight)
                         }
                     }
                     if (block <= (this.currentBlocks[0] - 1)) {
