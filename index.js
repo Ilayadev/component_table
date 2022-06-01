@@ -46,9 +46,7 @@ template.innerHTML = `<style>
 ::slotted(*){
     border:1px solid #dedede !important;
 }
-.main::-webkit-scrollbar {
-    display: none;
-}
+
 .editor{
     position:absolute;
     border:1px solid #13ad6b ;
@@ -123,13 +121,10 @@ class mycomponent extends HTMLElement {
     table = ''
     tableheight = 0
     NoOfRowsforBlock = 0
-    preblock = 0
-    currentblock = 1
+    preblock = 0   
     block = 0
     TotalNoOfBlocks = 0
-    previousoverallscrolltop = 0
-    scrollvariable = 0
-    scrollinper = false
+    previousoverallscrolltop = 0   
     previousmainscrolltop = 0
     currentBlocks = []
     Rowheight = 0
@@ -228,17 +223,17 @@ class mycomponent extends HTMLElement {
                         })
                     } else break
                 }
-                if (removeelement) {
-                    this.scrollinper = false
-                    let main = this.shadowRoot.querySelector('.main')
+                if (removeelement) {                   
                     if (direction === 'forward') {
-                        this.currentBlocks.shift()
-                        this.scrollvariable = 1
+                        this.currentBlocks.shift()                       
                         this.RemovingTopMostElements()
-                    } else {
-                        this.scrollvariable = 0
+                    } else {      
+                        let main = this.shadowRoot.querySelector('.main')                 
                         this.currentBlocks.pop()
                         this.RemovingDownMostElement()
+                        if(!this.overallElement){
+                            main.scrollTop=this.tableheight
+                        }
                     }
                 }
                 if (this.Highlighted === 'rowcell' || this.Highlighted === 'datacell') {
@@ -275,7 +270,7 @@ class mycomponent extends HTMLElement {
         } else {
             this.overallElement = true
         }
-        if (this.overallElement) {
+        if (this.overallElement) {           
             let main = this.shadowRoot.querySelector('.main')
             let scrolltop = Math.floor(overall.scrollTop)
             let scrollheight = overall.scrollHeight
@@ -283,30 +278,30 @@ class mycomponent extends HTMLElement {
             let bottom = scrollheight - clientheight
             this.checkingMainElement = true
             if (this.TotalNoOfBlocks > 3) {
-                let block = Math.ceil(scrolltop / this.tableheight)
+                let block = Math.ceil(scrolltop / this.tableheight)               
                 if (overall.scrollTop > this.previousoverallscrolltop) {
                     if (scrolltop === bottom) {
                         block = this.TotalNoOfBlocks - 1
                     }
                     if (block === this.currentBlocks[0]) {
-                        if (scrolltop % 600 !== 0) {
-                            main.scrollTop = scrolltop % 600
+                        if ((scrolltop % this.tableheight) !== 0) {
+                            main.scrollTop = scrolltop % this.tableheight
                         }
                     } else if (block === this.currentBlocks[1]) {
-                        if (scrolltop % 600 !== 0) {
-                            main.scrollTop = 600 + (scrolltop % 600)
+                        if ((scrolltop % this.tableheight) !== 0) {
+                            main.scrollTop = (this.tableheight )+ (scrolltop % this.tableheight)
                         }
                     } else if (block >= this.currentBlocks[2]) {
                         this.CheckingGenratedBlocks(block, 'forward')
                     }
                 } else {
                     if (block === this.currentBlocks[1]) {
-                        if (scrolltop % 600 !== 0) {
-                            main.scrollTop = 600 + (scrolltop % 600)
+                        if ((scrolltop % this.tableheight) !== 0) {
+                            main.scrollTop = this.tableheight + (scrolltop % this.tableheight)
                         }
                     } else if (block <= this.currentBlocks[0]) {
-                        if (scrolltop % 600 !== 0) {
-                            main.scrollTop = (scrolltop % 600)
+                        if ((scrolltop % this.tableheight) !== 0) {
+                            main.scrollTop = (scrolltop % this.tableheight)
                         }
                     }
                     if (block <= (this.currentBlocks[0] - 1)) {
@@ -637,14 +632,14 @@ class mycomponent extends HTMLElement {
             return index;
         }
     }
-    generatingElements = (cell, value) => {
+    generatingElements = (cell) => {
         let elementinstring = cell.element
         this.sampleele.innerHTML = elementinstring
         let element = this.sampleele.firstElementChild
         return element
     }
     connectedCallback() {
-        this.tableheight = this.getAttribute('tableheight')
+        this.tableheight = this.getAttribute('tableheight')/1
         let container = this.shadowRoot.querySelector('.container')
         let data = this.getAttribute('data')
         this.table = JSON.parse(data)
