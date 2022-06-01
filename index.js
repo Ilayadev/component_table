@@ -226,16 +226,19 @@ class mycomponent extends HTMLElement {
                     } else break
                 }
                 if (removeelement) {
-                    this.scrollinper = false
-                    let main = this.shadowRoot.querySelector('.main')
+                    this.scrollinper = false                    
                     if (direction === 'forward') {
                         this.currentBlocks.shift()
                         this.scrollvariable = 1
                         this.RemovingTopMostElements()
                     } else {
+                        let main = this.shadowRoot.querySelector('.main')
                         this.scrollvariable = 0
                         this.currentBlocks.pop()
                         this.RemovingDownMostElement()
+                        if(!this.overallElement){
+                           main.scrollTop=this.tableheight
+                        }
                     }
                 }
                 if (this.Highlighted === 'rowcell' || this.Highlighted === 'datacell') {
