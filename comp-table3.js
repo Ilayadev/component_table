@@ -46,9 +46,7 @@ template.innerHTML = `<style>
 ::slotted(*){
     border:1px solid #dedede !important;
 }
-.main::-webkit-scrollbar {
-    display: none;
-}
+
 .editor{
     position:absolute;
     border:1px solid #13ad6b ;
@@ -298,7 +296,7 @@ class mycomponent extends HTMLElement {
                     }
                 } else {
                     if (block === this.currentBlocks[1]) {
-                        if ((scrolltop % this.tableheight) !== 0) {
+                        if ((scrolltop % this.tableheight) !== 0) {                           
                             main.scrollTop = this.tableheight + (scrolltop % this.tableheight)
                         }
                     } else if (block <= this.currentBlocks[0]) {
@@ -411,6 +409,7 @@ class mycomponent extends HTMLElement {
         }
     }
     highlighting = (e) => {
+        console.log(e)
         let arrayofele = document.elementsFromPoint(e.x, e.y)
         let arrayofeleLength=arrayofele.length
         let Element;
