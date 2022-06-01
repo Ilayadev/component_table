@@ -46,6 +46,9 @@ template.innerHTML = `<style>
 ::slotted(*){
     border:1px solid #dedede !important;
 }
+.main::-webkit-scrollbar {
+    display: none;
+}
 .editor{
     position:absolute;
     border:1px solid #13ad6b ;
