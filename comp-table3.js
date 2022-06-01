@@ -415,7 +415,14 @@ class mycomponent extends HTMLElement {
     }
     highlighting = (e) => {
         let arrayofele = document.elementsFromPoint(e.x, e.y)
-        let Element = arrayofele[arrayofele.length - 4]
+        let arrayofeleLength=arrayofele.length
+        let Element;
+        for(let i=0;i<arrayofeleLength;i++){
+            if(arrayofele[i].hasAttribute('cell')){
+                Element=arrayofele[i]
+                break
+            }
+        }       
         let attribute = Element.getAttribute('cell')
         if (attribute === 'columncell' || attribute === 'rowcell') {
             let overlapelement = this.shadowRoot.querySelector('.overlapingelement')
@@ -427,7 +434,7 @@ class mycomponent extends HTMLElement {
                 let width = Element.offsetWidth
                 overlapelement.style.width = `${width}px`;
                 overlapelement.style.height = `100%`
-                this.overlapingelement(Element)
+                this.overlapingelement(Element,'column')
                 let columnNo = Element.getAttribute('columnNo') / 1 + 1
                 this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(${columnNo}))`;
                 this.shadowRoot.styleSheets[0].cssRules[6].selectorText = 'nothing'
@@ -482,9 +489,16 @@ class mycomponent extends HTMLElement {
         this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `::slotted(*:nth-child(${index + 1})`;
         this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `nothing`;
     }
-    overlapingelement = (element) => {
-        let left = element.offsetLeft
-        let top = element.offsetTop
+    overlapingelement = (element,highlighted) => {
+        let left;
+        let top;
+        if(highlighted==='row'){
+            left = element.offsetLeft
+            top = element.offsetTop
+        }else{
+            left=element.getBoundingClientRect().left
+            top=element.getBoundingClientRect().top
+        }
         let overlapele = this.shadowRoot.querySelector('.overlapingelement')
         overlapele.style.display = 'block'
         overlapele.style.left = `${left}px`

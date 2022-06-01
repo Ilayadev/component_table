@@ -229,19 +229,16 @@ class mycomponent extends HTMLElement {
                     } else break
                 }
                 if (removeelement) {
-                    this.scrollinper = false                    
+                    this.scrollinper = false
+                    let main = this.shadowRoot.querySelector('.main')
                     if (direction === 'forward') {
                         this.currentBlocks.shift()
                         this.scrollvariable = 1
                         this.RemovingTopMostElements()
                     } else {
-                        let main = this.shadowRoot.querySelector('.main')
                         this.scrollvariable = 0
                         this.currentBlocks.pop()
                         this.RemovingDownMostElement()
-                        if(!this.overallElement){
-                           main.scrollTop=this.tableheight
-                        }
                     }
                 }
                 if (this.Highlighted === 'rowcell' || this.Highlighted === 'datacell') {
@@ -292,24 +289,24 @@ class mycomponent extends HTMLElement {
                         block = this.TotalNoOfBlocks - 1
                     }
                     if (block === this.currentBlocks[0]) {
-                        if (scrolltop % this.tableheight !== 0) {
-                            main.scrollTop = scrolltop % this.tableheight
+                        if (scrolltop % 600 !== 0) {
+                            main.scrollTop = scrolltop % 600
                         }
                     } else if (block === this.currentBlocks[1]) {
-                        if (scrolltop % this.tableheight !== 0) {
-                            main.scrollTop = this.tableheight + (scrolltop % this.tableheight)
+                        if (scrolltop % 600 !== 0) {
+                            main.scrollTop = 600 + (scrolltop % 600)
                         }
                     } else if (block >= this.currentBlocks[2]) {
                         this.CheckingGenratedBlocks(block, 'forward')
                     }
                 } else {
                     if (block === this.currentBlocks[1]) {
-                        if (scrolltop % this.tableheight !== 0) {
-                            main.scrollTop = this.tableheight + (scrolltop % this.tableheight)
+                        if (scrolltop % 600 !== 0) {
+                            main.scrollTop = 600 + (scrolltop % 600)
                         }
                     } else if (block <= this.currentBlocks[0]) {
-                        if (scrolltop % this.tableheight !== 0) {
-                            main.scrollTop = (scrolltop % this.tableheight)
+                        if (scrolltop % 600 !== 0) {
+                            main.scrollTop = (scrolltop % 600)
                         }
                     }
                     if (block <= (this.currentBlocks[0] - 1)) {
@@ -418,7 +415,14 @@ class mycomponent extends HTMLElement {
     }
     highlighting = (e) => {
         let arrayofele = document.elementsFromPoint(e.x, e.y)
-        let Element = arrayofele[arrayofele.length - 4]
+        let arrayofeleLength=arrayofele.length
+        let Element;
+        for(let i=0;i<arrayofeleLength;i++){
+            if(arrayofele[i].hasAttribute('cell')){
+                Element=arrayofele[i]
+                break
+            }
+        }       
         let attribute = Element.getAttribute('cell')
         if (attribute === 'columncell' || attribute === 'rowcell') {
             let overlapelement = this.shadowRoot.querySelector('.overlapingelement')
@@ -430,7 +434,7 @@ class mycomponent extends HTMLElement {
                 let width = Element.offsetWidth
                 overlapelement.style.width = `${width}px`;
                 overlapelement.style.height = `100%`
-                this.overlapingelement(Element)
+                this.overlapingelement(Element,'column')
                 let columnNo = Element.getAttribute('columnNo') / 1 + 1
                 this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `::slotted(*:nth-child(${columnNo}))`;
                 this.shadowRoot.styleSheets[0].cssRules[6].selectorText = 'nothing'
@@ -485,9 +489,16 @@ class mycomponent extends HTMLElement {
         this.shadowRoot.styleSheets[0].cssRules[6].selectorText = `::slotted(*:nth-child(${index + 1})`;
         this.shadowRoot.styleSheets[0].cssRules[7].selectorText = `nothing`;
     }
-    overlapingelement = (element) => {
-        let left = element.offsetLeft
-        let top = element.offsetTop
+    overlapingelement = (element,highlighted) => {
+        let left;
+        let top;
+        if(highlighted==='row'){
+            left = element.offsetLeft
+            top = element.offsetTop
+        }else{
+            left=element.getBoundingClientRect().left
+            top=element.getBoundingClientRect().top
+        }
         let overlapele = this.shadowRoot.querySelector('.overlapingelement')
         overlapele.style.display = 'block'
         overlapele.style.left = `${left}px`
