@@ -126,9 +126,11 @@ class mycomponent extends HTMLElement {
     TotalNoOfBlocks = 0
     previousoverallscrolltop = 0
     scrollvariable = 0
+    scrollinper = false
     previousmainscrolltop = 0
     currentBlocks = []
     Rowheight = 0
+    previousdirection = ''
     // throttlingofOverall = false
     MainElement = true
     overallElement = true
@@ -168,7 +170,7 @@ class mycomponent extends HTMLElement {
                     this.preblock = number
                     this.block = number + 2
                 }
-                if (this.selectedrowno > start) {                   
+                if (this.selectedrowno > start) {
                     if (this.Highlighted === 'rowcell') {
                         checkinghighlightrow = true
                     } else if (this.Highlighted === 'datacell') {
@@ -224,14 +226,16 @@ class mycomponent extends HTMLElement {
                     } else break
                 }
                 if (removeelement) {
+                    this.scrollinper = false
+                    let main = this.shadowRoot.querySelector('.main')
                     if (direction === 'forward') {
                         this.currentBlocks.shift()
+                        this.scrollvariable = 1
                         this.RemovingTopMostElements()
                     } else {
-                        let main = this.shadowRoot.querySelector('.main')
+                        this.scrollvariable = 0
                         this.currentBlocks.pop()
                         this.RemovingDownMostElement()
-                        main.scrollTop = this.tableheight
                     }
                 }
                 if (this.Highlighted === 'rowcell' || this.Highlighted === 'datacell') {
@@ -277,21 +281,42 @@ class mycomponent extends HTMLElement {
             this.checkingMainElement = true
             if (this.TotalNoOfBlocks > 3) {
                 let block = Math.ceil(scrolltop / this.tableheight)
-                if (block !== this.currentblock) {
-                    if (overall.scrollTop > this.previousoverallscrolltop) {
-                        if (scrolltop === bottom) {
-                            block = this.TotalNoOfBlocks - 1
+                if (overall.scrollTop > this.previousoverallscrolltop) {
+                    if (scrolltop === bottom) {
+                        block = this.TotalNoOfBlocks - 1
+                    }
+                    if (block === this.currentBlocks[0]) {
+                        if (scrolltop % 600 !== 0) {
+                            main.scrollTop = scrolltop % 600
                         }
-                        if (block !== 1) {
-                            this.CheckingGenratedBlocks(block, "forward")
+                    } else if (block === this.currentBlocks[1]) {
+                        if (scrolltop % 600 !== 0) {
+                            main.scrollTop = 600 + (scrolltop % 600)
                         }
-                    } else {
+                    } else if (block >= this.currentBlocks[2]) {
+                        this.CheckingGenratedBlocks(block, 'forward')
+                    }
+                } else {
+                    if (block === this.currentBlocks[1]) {
+                        if (scrolltop % 600 !== 0) {
+                            main.scrollTop = 600 + (scrolltop % 600)
+                        }
+                    } else if (block <= this.currentBlocks[0]) {
+                        if (scrolltop % 600 !== 0) {
+                            main.scrollTop = (scrolltop % 600)
+                        }
+                    }
+                    if (block <= (this.currentBlocks[0] - 1)) {
                         if (scrolltop === 0 || block === 1) {
                             block = 2
                         }
-                        this.CheckingGenratedBlocks(block, "backward")
+                        this.CheckingGenratedBlocks(block, 'backward')
                     }
-                    this.currentblock = block
+                }
+                if (scrolltop === bottom) {
+                    main.scrollTop = (2 * this.tableheight) + this.Rowheight
+                } else if (scrolltop === 0) {
+                    main.scrollTop = 0
                 }
             }
             else {
@@ -317,7 +342,7 @@ class mycomponent extends HTMLElement {
             this.checkingOverallElement = true
             if (this.TotalNoOfBlocks > 3) {
                 if (scrolltop >= this.previousmainscrolltop) {
-                    if (scrolltop === bottom) {                     
+                    if (scrolltop === bottom) {
                         this.renderingcells(this.block + 1, 'forward', true)
                         if (this.block === this.TotalNoOfBlocks) {
                             overall.scrollTop = overall.scrollHeight - this.tableheight
@@ -327,7 +352,7 @@ class mycomponent extends HTMLElement {
                         overall.scrollTop = (this.preblock - 1) * (this.NoOfRowsforBlock * this.Rowheight) + (scrolltop)
                     }
                 } else {
-                    if (scrolltop === 0) {                        
+                    if (scrolltop === 0) {
                         this.renderingcells(this.preblock - 1, 'backward', true)
                         if (this.preblock === 1) {
                             overall.scrollTop = 0
@@ -386,8 +411,8 @@ class mycomponent extends HTMLElement {
         }
     }
     highlighting = (e) => {
-        let pathlenght = e.path.length
-        let Element = e.path[pathlenght - 11]
+        let arrayofele = document.elementsFromPoint(e.x, e.y)
+        let Element = arrayofele[arrayofele.length - 4]
         let attribute = Element.getAttribute('cell')
         if (attribute === 'columncell' || attribute === 'rowcell') {
             let overlapelement = this.shadowRoot.querySelector('.overlapingelement')
@@ -410,7 +435,7 @@ class mycomponent extends HTMLElement {
                 this.highlightingrow(Element)
             }
         }
-        else if(attribute==='datacell'){
+        else if (attribute === 'datacell') {
             this.highlightingcells(Element)
         }
         this.Highlighted = attribute
