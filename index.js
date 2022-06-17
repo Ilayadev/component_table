@@ -501,7 +501,7 @@ class mycomponent extends HTMLElement {
         overlapele.style.left = `${left}px`
         overlapele.style.top = `${top}px`
     }
-    Keyoperating = (e) => {
+    Keyoperating = (e) => {        
         let rowsLength = this.table.columns.length + 1
         let index;
         if (e.keyCode >= 37 && e.keyCode <= 40) {

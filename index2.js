@@ -46,7 +46,6 @@ template.innerHTML = `<style>
 ::slotted(*){
     border:1px solid #dedede !important;
 }
-
 .editor{
     position:absolute;
     border:1px solid #13ad6b ;
@@ -79,8 +78,8 @@ template.innerHTML = `<style>
 <div class=editor></div>
 <div class="main" >
     <div class="container">  
-      <slot name="columncell"></slot>    
-      <div class='overlapingelement'></div>
+        <slot name="columncell"></slot>    
+        <div class='overlapingelement'></div>
     </div>
 </div>
 <div class="dummy"></div>
@@ -110,6 +109,7 @@ class mycomponent extends HTMLElement {
                 element = this.generatingElements(cell)
                 this.settingValue(element, cell, value)
                 element.setAttribute('columnNo', i)
+                element.setAttribute('draggable', true)
                 element.setAttribute('cell', 'columncell')
             }
             this.appendChild(element)
@@ -270,7 +270,7 @@ class mycomponent extends HTMLElement {
         } else {
             this.overallElement = true
         }
-        if (this.overallElement) {           
+        if (this.overallElement) {            
             let main = this.shadowRoot.querySelector('.main')
             let scrolltop = Math.floor(overall.scrollTop)
             let scrollheight = overall.scrollHeight
@@ -296,7 +296,7 @@ class mycomponent extends HTMLElement {
                     }
                 } else {
                     if (block === this.currentBlocks[1]) {
-                        if ((scrolltop % this.tableheight) !== 0) {                           
+                        if ((scrolltop % this.tableheight) !== 0) {
                             main.scrollTop = this.tableheight + (scrolltop % this.tableheight)
                         }
                     } else if (block <= this.currentBlocks[0]) {
@@ -330,7 +330,7 @@ class mycomponent extends HTMLElement {
         } else {
             this.MainElement = true
         }
-        if (this.MainElement) {
+        if (this.MainElement) {          
             let overall = this.shadowRoot.querySelector('.overall')
             var main = this.shadowRoot.querySelector('.main');
             var scrollheight = main.scrollHeight;
@@ -409,7 +409,6 @@ class mycomponent extends HTMLElement {
         }
     }
     highlighting = (e) => {
-        console.log(e)
         let arrayofele = document.elementsFromPoint(e.x, e.y)
         let arrayofeleLength=arrayofele.length
         let Element;
@@ -500,7 +499,7 @@ class mycomponent extends HTMLElement {
         overlapele.style.left = `${left}px`
         overlapele.style.top = `${top}px`
     }
-    Keyoperating = (e) => {
+    Keyoperating = (e) => {         
         let rowsLength = this.table.columns.length + 1
         let index;
         if (e.keyCode >= 37 && e.keyCode <= 40) {
@@ -616,10 +615,10 @@ class mycomponent extends HTMLElement {
         if (child) {
             element = element.querySelector(`${child}`)
         }
-        if (att === 'innerText' || att === 'innerHTML') {
+        if (att === 'innerText' || att === 'innerHTML'||att==='checked') {
             element[att] = value
-        } else {
-            element.setAttribute(`${att}`, `${value}`)
+        } else {            
+            element.setAttribute(att, value)
         }
 
     }
@@ -639,7 +638,10 @@ class mycomponent extends HTMLElement {
         let element = this.sampleele.firstElementChild
         return element
     }
-    connectedCallback() {
+    dragging(e){
+        console.log(e.target.getAttribute('columnno'))
+    }
+    connectedCallback() {      
         this.tableheight = this.getAttribute('tableheight')/1
         let container = this.shadowRoot.querySelector('.container')
         let data = this.getAttribute('data')
@@ -656,9 +658,10 @@ class mycomponent extends HTMLElement {
         for (let i = 1; i <= 3; i++) {
             this.renderingcells(i, 'forward', false)
         }
-        let main = this.shadowRoot.querySelector('.main')
+        let main = this.shadowRoot.querySelector('.main')        
         main.addEventListener('scroll', this.MainElementScrolling)
         container.addEventListener('click', this.highlighting)
+        container.addEventListener('drag',this.dragging)
         overall.addEventListener('scroll', this.overallElementScrolling)
         overall.addEventListener('keydown', this.Keyoperating)
         overall.addEventListener('dblclick', this.editing)
